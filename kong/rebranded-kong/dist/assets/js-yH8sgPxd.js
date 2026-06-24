@@ -1,0 +1,1 @@
+var e=`#6c7489`,t=`#6c7489`,n=`#0030cc`,r=`16px`;export{r as i,t as n,n as r,e as t};

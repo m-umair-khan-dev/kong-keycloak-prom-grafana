@@ -1,0 +1,1 @@
+import{G as e}from"./entities-shared.es-ZXRDBdIu.js";var t=new e,n=()=>t;export{n as t};

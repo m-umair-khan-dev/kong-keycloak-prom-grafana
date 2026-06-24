@@ -1,0 +1,1 @@
+import{Et as e,vt as t}from"./runtime-core.esm-bundler-De3fKl10.js";import{t as n}from"./useBaseGeneralConfig-CJ0L0tLF.js";var r=()=>t({...e(n())});export{r as t};

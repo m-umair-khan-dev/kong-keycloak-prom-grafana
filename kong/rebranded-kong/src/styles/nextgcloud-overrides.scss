@@ -1,0 +1,87 @@
+// NextGCloud Theme Color Overrides
+// Central theme color overrides for sidebar, buttons, and accents
+@use "sass:color";
+
+// NextGCloud Color Palette matching the logo:
+$nextgcloud-indigo: #2D14C4;       // Main logo indigo/royal blue
+$nextgcloud-coral: #EA4A34;        // Logo bright accent red-orange (from the "G" and stars)
+$nextgcloud-plum: #8E1674;         // Logo plum/magenta gradient end
+$nextgcloud-dark-navy: #120E3E;    // Dark navy for sidebar/navbar, matching the dark tone of the logo
+$nextgcloud-light-indigo: #4F38DF; // Slightly lighter for hover states
+$nextgcloud-background: #FAFAFE;
+
+// Override Kong design tokens via CSS custom properties
+:root {
+  --kui-color-text-primary: #{$nextgcloud-indigo};
+  --kui-color-text-primary-strong: #{$nextgcloud-light-indigo};
+  --kui-color-text-primary-stronger: #220FA2;
+  --kui-color-text-primary-strongest: #1A0B80;
+  --kui-color-background-primary: #{$nextgcloud-indigo};
+  --kui-color-background-primary-weak: #{$nextgcloud-light-indigo};
+  --kui-color-background-primary-strong: #{$nextgcloud-light-indigo};
+  --kui-color-border-primary: #{$nextgcloud-indigo};
+  --kui-color-border-primary-strong: #{$nextgcloud-light-indigo};
+}
+
+// Primary button overrides
+.k-button.primary,
+.k-button[appearance="primary"] {
+  background-color: $nextgcloud-indigo !important;
+  border-color: $nextgcloud-indigo !important;
+
+  &:hover {
+    background-color: $nextgcloud-light-indigo !important;
+    border-color: $nextgcloud-light-indigo !important;
+  }
+
+  &:active {
+    background-color: color.adjust($nextgcloud-light-indigo, $lightness: -5%) !important;
+  }
+}
+
+// Link colors
+a:not(.k-button) {
+  color: $nextgcloud-indigo;
+
+  &:hover {
+    color: $nextgcloud-light-indigo;
+  }
+}
+
+// Focus ring colors
+*:focus-visible {
+  outline-color: $nextgcloud-indigo !important;
+}
+
+// Badge/tag primary colors
+.k-badge.primary,
+.k-badge[appearance="primary"] {
+  background-color: $nextgcloud-indigo !important;
+}
+
+// Switch toggle primary colors
+.k-switch.on .switch-control {
+  background-color: $nextgcloud-indigo !important;
+}
+
+// Checkbox and radio primary colors
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  accent-color: $nextgcloud-indigo !important;
+}
+
+// Progress bar primary colors
+.k-progress .progress-bar {
+  background-color: $nextgcloud-indigo !important;
+}
+
+// Tab active state
+.k-tabs .tab-item.active {
+  border-bottom-color: $nextgcloud-indigo !important;
+  color: $nextgcloud-indigo !important;
+}
+
+// Selection highlight
+::selection {
+  background-color: rgba($nextgcloud-indigo, 0.2);
+}
