@@ -2,10 +2,15 @@
 FROM node:20 AS ui-builder
 
 WORKDIR /app
-COPY . .
 
 RUN npm install -g pnpm --legacy-peer-deps
+
+# Copy only dependency files to leverage Docker layer caching
+COPY package.json pnpm-lock.yaml ./
 RUN pnpm install
+
+# Copy the rest of the application source code
+COPY . .
 RUN pnpm build
 
 # Stage 2: Download OIDCIFY
