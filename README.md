@@ -14,6 +14,7 @@ Unlike the hybrid systemd model, all services are managed entirely by Docker Com
 * **`docker-compose.yml`**: Defines the unified service configuration for all containerized services.
 * **`.env`**: Stores sensitive database passwords and administrative credentials.
 * **`deploy.sh`**: Orchestration shell script to verify host paths, set folder ownership permissions, build/start containers, and initialize metrics collection.
+* **`OBSERVABILITY.md`**: Detailed architecture guide mapping Prometheus metrics and OpenTelemetry (Jaeger) tracing ([OBSERVABILITY.md](./OBSERVABILITY.md)).
 
 ---
 
@@ -64,6 +65,7 @@ Once the installation is complete, the services will be accessible at:
 * **Kong Manager (UI)**: [http://localhost:8002](http://localhost:8002)
 * **Prometheus Dashboard**: [http://localhost:9090](http://localhost:9090)
 * **Grafana Dashboard**: [http://localhost:3000](http://localhost:3000) (default credentials: `admin` / `admin`)
+* **Jaeger Tracing (UI)**: [http://localhost:16686](http://localhost:16686)
 
 ---
 

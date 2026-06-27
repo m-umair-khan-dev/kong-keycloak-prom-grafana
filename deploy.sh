@@ -148,7 +148,7 @@ enable_kong_prometheus() {
   elif [[ "${resp}" == "409" ]]; then
     log "Kong Prometheus plugin already enabled. Updating configuration..."
     local plugin_id
-    plugin_id=$(curl -s http://localhost:8001/plugins | grep -oE '"id":"[0-9a-f-]{36}"' | head -n 1 | cut -d'"' -f4)
+    plugin_id=$(curl -s "http://localhost:8001/plugins?name=prometheus" | grep -oE '"id":"[0-9a-f-]{36}"' | head -n 1 | cut -d'"' -f4)
     if [[ -n "${plugin_id}" ]]; then
       curl -s -o /dev/null -X PATCH "http://localhost:8001/plugins/${plugin_id}" \
         --data "config.status_code_metrics=true" \
@@ -163,11 +163,39 @@ enable_kong_prometheus() {
   fi
 }
 
+enable_kong_opentelemetry() {
+  log "Enabling Kong OpenTelemetry plugin"
+  local resp
+  resp=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8001/plugins \
+    --data "name=opentelemetry" \
+    --data "config.traces_endpoint=http://jaeger:4318/v1/traces" \
+    --data "config.resource_attributes.service.name=kong-gateway")
+  
+  if [[ "${resp}" == "201" ]]; then
+    log "Kong OpenTelemetry plugin enabled"
+  elif [[ "${resp}" == "409" ]]; then
+    log "Kong OpenTelemetry plugin already enabled. Updating configuration..."
+    local plugin_id
+    plugin_id=$(curl -s "http://localhost:8001/plugins?name=opentelemetry" | grep -oE '"id":"[0-9a-f-]{36}"' | head -n 1 | cut -d'"' -f4)
+    if [[ -n "${plugin_id}" ]]; then
+      curl -s -o /dev/null -X PATCH "http://localhost:8001/plugins/${plugin_id}" \
+        --data "config.traces_endpoint=http://jaeger:4318/v1/traces" \
+        --data "config.resource_attributes.service.name=kong-gateway"
+      log "Kong OpenTelemetry plugin configuration updated successfully"
+    else
+      warn "Could not determine OpenTelemetry plugin ID to update configuration"
+    fi
+  else
+    die "Failed to configure Kong OpenTelemetry plugin (status ${resp})"
+  fi
+}
+
 main() {
   ensure_data_root
   start_docker_stack
   wait_for_kong
   enable_kong_prometheus
+  enable_kong_opentelemetry
 
   log "Deployment complete!"
   log "Kong Proxy:       http://localhost:8000"
@@ -175,6 +203,7 @@ main() {
   log "Kong Manager:     http://localhost:8002"
   log "Prometheus:       http://localhost:9090"
   log "Grafana:          http://localhost:3000"
+  log "Jaeger UI:        http://localhost:16686"
 }
 
 main "$@"

@@ -42,6 +42,8 @@ services:
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_PLUGINS: bundled, prometheus, oidc, kong-openid-connect
       KONG_STATUS_LISTEN: 0.0.0.0:8100
+      KONG_TRACING_INSTRUMENTATIONS: all
+      KONG_TRACING_SAMPLING_RATE: "1.0"
     ports:
       - "8000:8000"
       - "8443:8443"
@@ -50,6 +52,17 @@ services:
       - "8002:8002"
       - "8445:8445"
       - "8100:8100"
+    networks:
+      - internal-net
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
+    container_name: jaeger
+    restart: always
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
     networks:
       - internal-net
 
