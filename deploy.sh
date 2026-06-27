@@ -47,6 +47,7 @@ export DATA_ROOT
 PROM_DATA_DIR="${DATA_ROOT}/prometheus"
 GRAFANA_DATA_DIR="${DATA_ROOT}/grafana"
 PG_DATA_DIR="${DATA_ROOT}/postgres"
+OPENSEARCH_DATA_DIR="${DATA_ROOT}/opensearch"
 
 ensure_data_root() {
   if [[ ! -d "${DATA_ROOT}" ]]; then
@@ -66,10 +67,14 @@ ensure_data_root() {
     fi
   fi
 
+  # Set host virtual memory configuration for OpenSearch
+  log "Configuring host virtual memory map count for OpenSearch..."
+  run_root sysctl -w vm.max_map_count=262144 || true
+
   # Create directories
   log "Creating host storage directories..."
-  if [[ ! -d "${PROM_DATA_DIR}" || ! -d "${GRAFANA_DATA_DIR}" || ! -d "${PG_DATA_DIR}" ]]; then
-    run_root mkdir -p "${PROM_DATA_DIR}" "${GRAFANA_DATA_DIR}" "${PG_DATA_DIR}" || true
+  if [[ ! -d "${PROM_DATA_DIR}" || ! -d "${GRAFANA_DATA_DIR}" || ! -d "${PG_DATA_DIR}" || ! -d "${OPENSEARCH_DATA_DIR}" ]]; then
+    run_root mkdir -p "${PROM_DATA_DIR}" "${GRAFANA_DATA_DIR}" "${PG_DATA_DIR}" "${OPENSEARCH_DATA_DIR}" || true
   fi
 
   # Set correct ownership for containerized environments
@@ -83,6 +88,9 @@ ensure_data_root() {
   
   # Grafana (UID 472 - grafana)
   run_root chown -R 472:472 "${GRAFANA_DATA_DIR}" || true
+
+  # OpenSearch (UID 1000 - opensearch)
+  run_root chown -R 1000:1000 "${OPENSEARCH_DATA_DIR}" || true
 }
 
 start_docker_stack() {
