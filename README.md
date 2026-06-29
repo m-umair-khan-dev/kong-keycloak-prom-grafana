@@ -18,7 +18,7 @@ Unlike the hybrid systemd model, all services are managed entirely by Docker Com
 * **`docker-compose.yml`**: Defines the unified service configuration for all containerized services.
 * **`.env`**: Stores sensitive database passwords and administrative credentials.
 * **`deploy.sh`**: Orchestration shell script to verify host paths, set folder ownership permissions, build/start containers, and initialize metrics collection.
-* **`OBSERVABILITY.md`**: Detailed architecture guide mapping Prometheus metrics, Loki logs, and OpenTelemetry (Tempo) tracing ([OBSERVABILITY.md](./OBSERVABILITY.md)).
+* **`docs/`**: Contains project documentation, including the detailed architecture guide for metrics, logs, and tracing ([OBSERVABILITY.md](./docs/OBSERVABILITY.md)).
 
 ---
 
