@@ -1,6 +1,6 @@
 # Fully Containerized (Docker-based) Kong & Monitoring Stack
 
-This folder contains a fully containerized deployment of the **Kong API Gateway (Next G Cloud Manager)**, **Keycloak**, **Postgres**, and a containerized monitoring stack containing **Prometheus**, **Grafana**, and **Node Exporter**.
+This folder contains a fully containerized deployment of the **Kong API Gateway (xFlow Research Manager)**, **Keycloak**, **Postgres**, and a containerized monitoring stack containing **Prometheus**, **Grafana**, and **Node Exporter**.
 
 Unlike the hybrid systemd model, all services are managed entirely by Docker Compose.
 
@@ -180,7 +180,7 @@ When transitioning the stack from a development environment to staging or produc
 
 ### 1. Hostname Setup (Redirect URLs)
 Keycloak generates OAuth redirect URLs based on host header request values. In production:
-* Set **`KC_HOSTNAME`** to your public domain (e.g. `auth.nextgcloud.com`).
+* Set **`KC_HOSTNAME`** to your public domain (e.g. `auth.xflowresearch.com`).
 * Set **`KC_HOSTNAME_STRICT`** to `"true"` to enforce strict URL validation.
 
 ### 2. HTTPS and Proxy Settings
