@@ -1,0 +1,90 @@
+// xFlow Research Theme Color Overrides
+// Central theme color overrides for sidebar, buttons, and accents
+@use "sass:color";
+
+// xFlow Research Color Palette matching the logo:
+$xflow-blue: #0466af;         // Primary brand blue
+$xflow-cyan: #00aeee;         // Accent cyan
+$xflow-dark-blue: #082142;    // Deep dark blue for sidebars/navbars
+$xflow-hover-blue: #035390;   // Slightly darker blue for hover states
+$xflow-strong-blue: #024376;  // Stronger blue
+$xflow-strongest-blue: #013158; // Strongest blue
+$xflow-background: #f8fafc;   // Clean light page background (slate-50)
+
+// Override Kong design tokens via CSS custom properties
+:root {
+  --kui-color-text-primary: #{$xflow-blue};
+  --kui-color-text-primary-strong: #{$xflow-hover-blue};
+  --kui-color-text-primary-stronger: #{$xflow-strong-blue};
+  --kui-color-text-primary-strongest: #{$xflow-strongest-blue};
+  --kui-color-background-primary: #{$xflow-blue};
+  --kui-color-background-primary-weak: #{$xflow-cyan};
+  --kui-color-background-primary-strong: #{$xflow-hover-blue};
+  --kui-color-border-primary: #{$xflow-blue};
+  --kui-color-border-primary-strong: #{$xflow-hover-blue};
+}
+
+// Primary button overrides
+.k-button.primary,
+.k-button[appearance="primary"] {
+  background-color: $xflow-blue !important;
+  border-color: $xflow-blue !important;
+  color: #ffffff !important;
+
+  &:hover {
+    background-color: $xflow-hover-blue !important;
+    border-color: $xflow-hover-blue !important;
+  }
+
+  &:active {
+    background-color: color.adjust($xflow-hover-blue, $lightness: -5%) !important;
+  }
+}
+
+// Link colors
+a:not(.k-button) {
+  color: $xflow-blue;
+
+  &:hover {
+    color: $xflow-hover-blue;
+  }
+}
+
+// Focus ring colors
+*:focus-visible {
+  outline-color: $xflow-blue !important;
+}
+
+// Badge/tag primary colors
+.k-badge.primary,
+.k-badge[appearance="primary"] {
+  background-color: $xflow-blue !important;
+  color: #ffffff !important;
+}
+
+// Switch toggle primary colors
+.k-switch.on .switch-control {
+  background-color: $xflow-blue !important;
+}
+
+// Checkbox and radio primary colors
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  accent-color: $xflow-blue !important;
+}
+
+// Progress bar primary colors
+.k-progress .progress-bar {
+  background-color: $xflow-blue !important;
+}
+
+// Tab active state
+.k-tabs .tab-item.active {
+  border-bottom-color: $xflow-blue !important;
+  color: $xflow-blue !important;
+}
+
+// Selection highlight
+::selection {
+  background-color: rgba($xflow-blue, 0.2);
+}

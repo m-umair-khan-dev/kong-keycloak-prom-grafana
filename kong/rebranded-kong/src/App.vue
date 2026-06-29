@@ -127,24 +127,24 @@ const sidebarItems = computed<SidebarPrimaryItem[]>(() => [
   border-top-right-radius: $kui-border-radius-0 !important;
 }
 
-/* NextGCloud sidebar color overrides */
+/* xFlow Research sidebar color overrides */
 :deep(.kong-ui-app-sidebar) {
-  background-color: #120E3E !important; /* Dark logo navy-indigo */
+  background-color: #082142 !important; /* Deep xFlow Dark Blue */
 }
 
 :deep(.kong-ui-app-sidebar .sidebar-item-primary) {
   position: relative;
   
   &:hover {
-    background-color: rgba(45, 20, 196, 0.15) !important;
+    background-color: rgba(0, 174, 238, 0.15) !important; /* xFlow Cyan hover tint */
   }
   
   &.router-link-active,
   &.active {
-    background-color: #2D14C4 !important; /* Logo Indigo */
+    background-color: #0466af !important; /* xFlow Primary Blue */
     
     &, & *, & span, & .sidebar-item-label {
-      color: #FFFFFF !important; /* Clean readable white text! */
+      color: #FFFFFF !important; /* Clean readable white text */
     }
 
     &::before {
@@ -154,12 +154,12 @@ const sidebarItems = computed<SidebarPrimaryItem[]>(() => [
       top: 0;
       bottom: 0;
       width: 4px;
-      background-color: #EA4A34 !important; /* Coral active line indicator matching the "G" accent */
+      background-color: #00aeee !important; /* xFlow Cyan active indicator line */
     }
   }
 }
 
 :deep(.kong-ui-app-navbar) {
-  background-color: #120E3E !important; /* Dark logo navy-indigo */
+  background-color: #082142 !important; /* Deep xFlow Dark Blue */
 }
 </style>
