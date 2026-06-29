@@ -45,7 +45,7 @@
       },
       "start": {
         "title": "Get Started",
-        "description": "New to Next G Cloud? Get started with the basics."
+        "description": "New to xFlow Research? Get started with the basics."
       },
       "plugin": {
         "title": "Plugin Hub",
@@ -53,7 +53,7 @@
       },
       "discuss": {
         "title": "Community",
-        "description": "Discuss Next G Cloud with others."
+        "description": "Discuss xFlow Research with others."
       }
     }
   },
@@ -61,8 +61,8 @@
     "description": "We cannot find the page you were looking for. Go back to the previous page or {overview}."
   },
   "konnect-cta": {
-    "name": "Next G Cloud",
-    "description": "The easiest way to get started with Next G Cloud.",
+    "name": "xFlow Research",
+    "description": "The easiest way to get started with xFlow Research.",
     "get.started": "Get Started",
     "footer.description": "No credit card required & free plan available",
     "feature.1": "Simplify API Gateway operations with cloud-native control plane",
