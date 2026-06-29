@@ -1,6 +1,6 @@
 # Fully Containerized (Docker-based) Kong & Monitoring Stack
 
-This folder contains a fully containerized deployment of the **Kong API Gateway (Next G Cloud Manager)**, **Keycloak**, **Postgres**, and a containerized monitoring stack containing **Prometheus**, **Grafana**, and **Node Exporter**.
+This folder contains a fully containerized deployment of the **Kong API Gateway (Kong Manager)**, **Keycloak**, **Postgres**, and a containerized monitoring stack containing **Prometheus**, **Grafana**, and **Node Exporter**.
 
 Unlike the hybrid systemd model, all services are managed entirely by Docker Compose.
 
@@ -20,41 +20,46 @@ Unlike the hybrid systemd model, all services are managed entirely by Docker Com
 
 ---
 
-## Deployment Configuration
+## Deployment Configuration & First-Time Setup
 
-You can customize the script behavior via the following host environment variables:
+All deployment parameters, password configurations, and Keycloak admin credentials are isolated in the `.env` file at the root of this folder.
 
-| Variable | Default Value | Description |
-| :--- | :--- | :--- |
-| `DATA_ROOT` | **None (Mandatory)** | Host directory mapped for Postgres, Prometheus, Loki, Tempo, and Grafana data storage. Must be an existing directory. |
-| `BYPASS_MOUNT_CHECK` | `false` | Set to `true` to allow installation on directories that are not separate disk mountpoints (useful for local development/testing). |
+When you run the deployment script for the first time, if no `.env` file exists, it will automatically copy the [.env.example](./.env.example) template to `.env` and pause. **You must edit the newly created `.env` file to replace all `CHANGE_ME` placeholders with secure passwords before running the script again.**
 
-All password configurations and Keycloak admin credentials are isolated in [.env](./.env) at the root of this folder.
-
-### What is `BYPASS_MOUNT_CHECK=true`?
-By default, the deployment script `deploy.sh` verifies that the `DATA_ROOT` directory is a **physically mounted disk partition** (such as a separate SSD, SAN, or external drive partition). 
-
-* **Why this check exists**: In production, databases (Postgres) and metrics databases (Prometheus) perform high-frequency write operations. Storing this on your root partition (`/`) risks filling up the OS drive, which will lock up or crash the host system. Enforcing a separate mount point protects the OS.
-* **What the bypass does**: Setting `BYPASS_MOUNT_CHECK=true` tells the script to skip this mount verification, allowing you to use any standard folder on your primary drive.
-* **When to use it**: Set this to `true` during local development, sandbox testing, or on single-disk cloud VMs where a dedicated partition is not available.
+### Configuration Variables
+By default, `.env` contains:
+* **`DATA_ROOT`**: Host directory mapped for Postgres, Prometheus, Loki, Tempo, and Grafana data storage (Default: `/home/xflow/data`).
+* **`BYPASS_MOUNT_CHECK`**: Set to `true` to skip the check ensuring `DATA_ROOT` is a physically mounted disk partition. (Recommended `false` in production to prevent OS disk filling).
 
 ---
 
-## How to Run
+## How to Run & CLI Flags
 
-### 1. Normal Production Deployment
-Ensure your target storage drive is mounted (e.g., at `/mnt/xflow-data`), and run:
+The `deploy.sh` script provides robust CLI flags for managing the stack:
+
+### 1. Start the Deployment
+Simply run the script (it automatically uses `--up`):
 ```bash
 chmod +x deploy.sh
-sudo DATA_ROOT=/mnt/xflow-data ./deploy.sh
+./deploy.sh
 ```
 
-### 2. Development / Sandbox Deployment (Bypassing Mount Check)
-If you are deploying in a test VM or directory that is not an active partition mountpoint, run:
+### 2. Safe Teardown
+To stop all containers gracefully:
 ```bash
-chmod +x deploy.sh
-sudo DATA_ROOT=/your/data/path BYPASS_MOUNT_CHECK=true ./deploy.sh
+./deploy.sh --down
 ```
+*(The script will ask for interactive confirmation. Use `-y` to bypass.)*
+
+### 3. Factory Reset / Clean Data
+To forcefully stop all containers **and** delete all data stored in `DATA_ROOT`:
+```bash
+./deploy.sh --clean --force
+```
+
+### Additional Flags
+* **`--skip-chown`**: Skips directory permission adjustments (useful on specific OS environments).
+* **`--help` / `-h`**: Displays the full help menu.
 
 ---
 
@@ -180,7 +185,7 @@ When transitioning the stack from a development environment to staging or produc
 
 ### 1. Hostname Setup (Redirect URLs)
 Keycloak generates OAuth redirect URLs based on host header request values. In production:
-* Set **`KC_HOSTNAME`** to your public domain (e.g. `auth.nextgcloud.com`).
+* Set **`KC_HOSTNAME`** to your public domain (e.g. `auth.xflowresearch.com`).
 * Set **`KC_HOSTNAME_STRICT`** to `"true"` to enforce strict URL validation.
 
 ### 2. HTTPS and Proxy Settings
@@ -193,3 +198,14 @@ Keycloak generates OAuth redirect URLs based on host header request values. In p
 
 ### 4. Admin User Credentials
 * Administrative credentials (`KEYCLOAK_ADMIN` and `KEYCLOAK_ADMIN_PASSWORD`) are stored in [.env](./.env) at the root of this folder. Always configure unique credentials for each deployment environment.
+
+---
+
+## Rebranded Gateway GUI Branches
+
+This repository maintains separate branches for customized/rebranded versions of the Kong Manager GUI:
+
+* **[rebranded-kong-gui-ngc](../../tree/rebranded-kong-gui-ngc)**: Rebranded theme for Next G Cloud (NGC) using a purple and indigo color scheme, customized registration links, and NGC brand assets.
+* **[rebranded-kong-gui-xflow](../../tree/rebranded-kong-gui-xflow)**: Rebranded theme for xFlow Research using the brand's signature royal blue and cyan color palette, support links, and xFlow logos.
+
+To deploy a rebranded stack, checkout the respective branch and run the `./deploy.sh` script.
