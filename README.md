@@ -11,10 +11,12 @@ Unlike the hybrid systemd model, all services are managed entirely by Docker Com
 * **`kong/`**: Clean, unmodified copy of the custom gateway codebase (containing rebranded UI assets and Dockerfile).
 * **`prometheus/`**: Stores containerized Prometheus configuration ([prometheus.yml](./prometheus/prometheus.yml)).
 * **`grafana/`**: Contains Grafana datasource and dashboard provisioning rules, dashboard JSON files, and plugins configuration.
+* **`loki/`**: Contains Loki configuration for OTLP and log storage ([loki.yml](./loki/loki.yml)).
+* **`promtail/`**: Contains Promtail configuration to scrape Kong logs and attach metadata ([promtail.yml](./promtail/promtail.yml)).
 * **`docker-compose.yml`**: Defines the unified service configuration for all containerized services.
 * **`.env`**: Stores sensitive database passwords and administrative credentials.
 * **`deploy.sh`**: Orchestration shell script to verify host paths, set folder ownership permissions, build/start containers, and initialize metrics collection.
-* **`OBSERVABILITY.md`**: Detailed architecture guide mapping Prometheus metrics and OpenTelemetry (Jaeger) tracing ([OBSERVABILITY.md](./OBSERVABILITY.md)).
+* **`OBSERVABILITY.md`**: Detailed architecture guide mapping Prometheus metrics, Loki logs, and OpenTelemetry (Tempo) tracing ([OBSERVABILITY.md](./OBSERVABILITY.md)).
 
 ---
 
@@ -24,7 +26,7 @@ You can customize the script behavior via the following host environment variabl
 
 | Variable | Default Value | Description |
 | :--- | :--- | :--- |
-| `DATA_ROOT` | **None (Mandatory)** | Host directory mapped for Postgres, Prometheus, and Grafana data storage. Must be an existing directory. |
+| `DATA_ROOT` | **None (Mandatory)** | Host directory mapped for Postgres, Prometheus, Loki, Tempo, and Grafana data storage. Must be an existing directory. |
 | `BYPASS_MOUNT_CHECK` | `false` | Set to `true` to allow installation on directories that are not separate disk mountpoints (useful for local development/testing). |
 
 All password configurations and Keycloak admin credentials are isolated in [.env](./.env) at the root of this folder.
@@ -65,7 +67,8 @@ Once the installation is complete, the services will be accessible at:
 * **Kong Manager (UI)**: [http://localhost:8002](http://localhost:8002)
 * **Prometheus Dashboard**: [http://localhost:9090](http://localhost:9090)
 * **Grafana Dashboard**: [http://localhost:3000](http://localhost:3000) (default credentials: `admin` / `admin`)
-* **Jaeger Tracing (UI)**: [http://localhost:16686](http://localhost:16686)
+* **Loki Log Collector (API)**: [http://localhost:3100](http://localhost:3100)
+* **Tempo Tracing (UI/API)**: [http://localhost:3200](http://localhost:3200)
 
 ---
 
