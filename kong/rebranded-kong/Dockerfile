@@ -56,9 +56,9 @@ RUN luarocks install kong-openid-connect
 
 
 # Replace Kong GUI
-RUN rm -rf /usr/local/kong/gui/*
-COPY --from=ui-builder /app/dist/ /usr/local/kong/gui/
-RUN chmod -R 755 /usr/local/kong/gui
+# RUN rm -rf /usr/local/kong/gui/*
+# COPY --from=ui-builder /app/dist/ /usr/local/kong/gui/
+# RUN chmod -R 755 /usr/local/kong/gui
 
 
 USER kong
