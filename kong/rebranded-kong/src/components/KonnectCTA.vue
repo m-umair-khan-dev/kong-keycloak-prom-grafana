@@ -87,7 +87,7 @@ const listItems = [
 
 const getIconPath = (icon: string) => new URL(`../assets/icon-${icon}.svg`, import.meta.url).href
 
-const link = 'https://www.nextgcloud.com/register'
+const link = 'https://xflowresearch.com/'
 </script>
 
 <style scoped lang="scss">
@@ -116,7 +116,7 @@ const link = 'https://www.nextgcloud.com/register'
   .konnect-gradient {
     font-size: 20px;
     font-weight: bold;
-    background: linear-gradient(92.35deg, #2D14C4 -0.87%, #8E1674 99.68%);
+    background: linear-gradient(92.35deg, #0466af -0.87%, #00aeee 99.68%);
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }

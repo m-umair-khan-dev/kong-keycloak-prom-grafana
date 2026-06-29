@@ -6,7 +6,7 @@
     >
       <img
         src="@/assets/logo.png?external"
-        alt="Next G Cloud Logo"
+        alt="xFlow Research Logo"
       >
     </router-link>
   </div>

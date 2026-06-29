@@ -22,7 +22,7 @@ const route = useRoute()
 const { t } = useI18n()
 const infoStore = useInfoStore()
 
-const mailToUrl = computed(() => `mailto:contact@nextgcloud.com?subject=${t('wish.subject', { title: `${route.meta.title} | Next G Cloud Manager@${infoStore.kongVersion}` })}`)
+const mailToUrl = computed(() => `mailto:info@xflowresearch.com?subject=${t('wish.subject', { title: `${route.meta.title} | xFlow Research Manager@${infoStore.kongVersion}` })}`)
 </script>
 
 <style scoped lang="scss">
