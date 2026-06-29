@@ -1,6 +1,6 @@
 # Fully Containerized (Docker-based) Kong & Monitoring Stack
 
-This folder contains a fully containerized deployment of the **Kong API Gateway (xFlow Research Manager)**, **Keycloak**, **Postgres**, and a containerized monitoring stack containing **Prometheus**, **Grafana**, and **Node Exporter**.
+This folder contains a fully containerized deployment of the **Kong API Gateway (Kong Manager)**, **Keycloak**, **Postgres**, and a containerized monitoring stack containing **Prometheus**, **Grafana**, and **Node Exporter**.
 
 Unlike the hybrid systemd model, all services are managed entirely by Docker Compose.
 
@@ -193,3 +193,14 @@ Keycloak generates OAuth redirect URLs based on host header request values. In p
 
 ### 4. Admin User Credentials
 * Administrative credentials (`KEYCLOAK_ADMIN` and `KEYCLOAK_ADMIN_PASSWORD`) are stored in [.env](./.env) at the root of this folder. Always configure unique credentials for each deployment environment.
+
+---
+
+## Rebranded Gateway GUI Branches
+
+This repository maintains separate branches for customized/rebranded versions of the Kong Manager GUI:
+
+* **[rebranded-kong-gui-ngc](../../tree/rebranded-kong-gui-ngc)**: Rebranded theme for Next G Cloud (NGC) using a purple and indigo color scheme, customized registration links, and NGC brand assets.
+* **[rebranded-kong-gui-xflow](../../tree/rebranded-kong-gui-xflow)**: Rebranded theme for xFlow Research using the brand's signature royal blue and cyan color palette, support links, and xFlow logos.
+
+To deploy a rebranded stack, checkout the respective branch and run the `./deploy.sh` script.
