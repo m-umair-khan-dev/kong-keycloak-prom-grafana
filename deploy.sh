@@ -16,6 +16,11 @@ log_warn() { printf "${YELLOW}[WARN]${NC} %s\n" "$*"; }
 log_error() { printf "${RED}[ERROR]${NC} %s\n" "$*"; }
 die() { log_error "$*"; exit 1; }
 
+
+# -----------------------------------------------------------------------------
+# Global Error Trapping
+# -----------------------------------------------------------------------------
+trap 'log_error "An unexpected error occurred on line $LINENO. Exiting."; exit 1' ERR
 SUDO=""
 if [[ "${EUID}" -ne 0 ]]; then
   command -v sudo >/dev/null 2>&1 || die "sudo is required when not running as root"
@@ -41,15 +46,41 @@ require_cmd mountpoint
 # -----------------------------------------------------------------------------
 # Configuration and .env Loading
 # -----------------------------------------------------------------------------
-if [[ -f "${ROOT_DIR}/.env" ]]; then
-  log_info "Loading environment variables from .env file..."
-  export $(grep -v '^#' "${ROOT_DIR}/.env" | xargs)
+if [[ ! -f "${ROOT_DIR}/.env" ]]; then
+  if [[ -f "${ROOT_DIR}/.env.example" ]]; then
+    log_info "No .env file found. Copying .env.example to .env..."
+    cp "${ROOT_DIR}/.env.example" "${ROOT_DIR}/.env"
+    log_warn "Please edit the newly created .env file to set your secure passwords, then run this script again."
+    exit 1
+  else
+    die "No .env file found and no .env.example available."
+  fi
+fi
+
+log_info "Loading environment variables from .env file..."
+export $(grep -v '^#' "${ROOT_DIR}/.env" | xargs)
+
+# Validate critical secrets
+CRITICAL_SECRETS=("POSTGRES_PASSWORD" "KONG_PG_PASSWORD" "KC_DB_PASSWORD" "KEYCLOAK_ADMIN" "KEYCLOAK_ADMIN_PASSWORD" "GF_DATABASE_PASSWORD")
+MISSING_SECRETS=0
+for secret in "${CRITICAL_SECRETS[@]}"; do
+  if [[ -z "${!secret:-}" || "${!secret}" == "CHANGE_ME" ]]; then
+    log_error "Missing or unset critical secret in .env: ${secret}"
+    MISSING_SECRETS=1
+  fi
+done
+
+if [[ $MISSING_SECRETS -eq 1 ]]; then
+  die "Please define all critical secrets in the .env file before proceeding."
 fi
 
 # Default Options
 ACTION="up"
 BYPASS_MOUNT_CHECK="${BYPASS_MOUNT_CHECK:-false}"
 SKIP_CHOWN="false"
+FORCE="false"
+AUTO_YES="false"
+
 
 # -----------------------------------------------------------------------------
 # CLI Argument Parsing
@@ -60,7 +91,10 @@ Usage: ./deploy.sh [OPTIONS]
 
 Options:
   --up                      Start the deployment (default)
-  --down                    Tear down the deployment (docker compose down)
+  --down                    Tear down the deployment safely
+  --clean                   Tear down the deployment AND delete all data volumes
+  --force                   Required when using --clean to confirm data deletion
+  -y, --yes                 Skip interactive confirmation prompts
   --skip-chown              Skip chown permission adjustments
   --bypass-mount-check      Bypass the check ensuring DATA_ROOT is a mounted filesystem
   -h, --help                Show this help message
@@ -78,6 +112,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --down)
       ACTION="down"
+      shift
+      ;;
+    --clean)
+      ACTION="clean"
+      shift
+      ;;
+    --force)
+      FORCE="true"
+      shift
+      ;;
+    -y|--yes)
+      AUTO_YES="true"
       shift
       ;;
     --skip-chown)
@@ -101,9 +147,40 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ "${ACTION}" == "down" ]]; then
+  if [[ "${AUTO_YES}" != "true" ]]; then
+    read -p "Are you sure you want to stop and remove all services? [y/N] " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+      log_info "Aborting teardown."
+      exit 0
+    fi
+  fi
   log_info "Tearing down containerized stack..."
   docker compose -f "${ROOT_DIR}/docker-compose.yml" down
   log_success "Teardown complete."
+  exit 0
+fi
+
+if [[ "${ACTION}" == "clean" ]]; then
+  if [[ "${FORCE}" != "true" ]]; then
+    die "The --clean flag requires the --force flag to prevent accidental data loss."
+  fi
+  
+  if [[ "${AUTO_YES}" != "true" ]]; then
+    log_warn "WARNING: This will DESTROY all containers AND all data in DATA_ROOT (${DATA_ROOT:-not set})."
+    read -p "Are you absolutely sure you want to wipe everything? [y/N] " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+      log_info "Aborting clean."
+      exit 0
+    fi
+  fi
+  
+  log_info "Tearing down containerized stack and removing volumes..."
+  docker compose -f "${ROOT_DIR}/docker-compose.yml" down -v
+  if [[ -n "${DATA_ROOT:-}" && -d "${DATA_ROOT}" ]]; then
+    log_info "Deleting host data directories in ${DATA_ROOT}..."
+    run_root rm -rf "${DATA_ROOT:?}/"* || true
+  fi
+  log_success "Clean complete."
   exit 0
 fi
 
