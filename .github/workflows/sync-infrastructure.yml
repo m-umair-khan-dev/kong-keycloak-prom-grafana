@@ -1,0 +1,44 @@
+# -----------------------------------------------------------------------------
+# sync-infrastructure.yml
+# -----------------------------------------------------------------------------
+# GitHub Actions workflow to enforce branching strategy rules and automatically
+# synchronize shared infrastructure files from main to branding branches.
+# -----------------------------------------------------------------------------
+
+name: Git Branching Strategy & Sync
+
+on:
+  push:
+    branches:
+      - main
+      - rebranded-kong-gui-xflow
+      - rebranded-kong-gui-ngc
+
+# Ensure write permissions to commit infrastructure changes back to target branches
+permissions:
+  contents: write
+
+jobs:
+  validate-and-sync:
+    name: Validate and Synchronize
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository with full history to allow git diffing historical commits
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 2: Make the helper script executable (precautionary)
+      - name: Setup Script Permissions
+        run: chmod +x ./scripts/git-sync-infra.sh
+
+      # Step 3: Run the validation and synchronization script
+      - name: Execute Git Strategy Engine
+        run: |
+          ./scripts/git-sync-infra.sh \
+            "${{ github.event.before }}" \
+            "${{ github.event.after }}" \
+            "${{ github.ref_name }}"
