@@ -4,10 +4,17 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="${SCRIPT_DIR}"
 
-log() { printf '[INFO] %s\n' "$*"; }
-warn() { printf '[WARN] %s\n' "$*"; }
-err() { printf '[ERROR] %s\n' "$*"; }
-die() { err "$*"; exit 1; }
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+log_info() { printf "${BLUE}[INFO]${NC} %s\n" "$*"; }
+log_success() { printf "${GREEN}[SUCCESS]${NC} %s\n" "$*"; }
+log_warn() { printf "${YELLOW}[WARN]${NC} %s\n" "$*"; }
+log_error() { printf "${RED}[ERROR]${NC} %s\n" "$*"; }
+die() { log_error "$*"; exit 1; }
 
 SUDO=""
 if [[ "${EUID}" -ne 0 ]]; then
@@ -31,10 +38,79 @@ require_cmd docker
 require_cmd curl
 require_cmd mountpoint
 
+# -----------------------------------------------------------------------------
+# Configuration and .env Loading
+# -----------------------------------------------------------------------------
+if [[ -f "${ROOT_DIR}/.env" ]]; then
+  log_info "Loading environment variables from .env file..."
+  export $(grep -v '^#' "${ROOT_DIR}/.env" | xargs)
+fi
+
+# Default Options
+ACTION="up"
+BYPASS_MOUNT_CHECK="${BYPASS_MOUNT_CHECK:-false}"
+SKIP_CHOWN="false"
+
+# -----------------------------------------------------------------------------
+# CLI Argument Parsing
+# -----------------------------------------------------------------------------
+show_help() {
+  cat << 'HELP'
+Usage: ./deploy.sh [OPTIONS]
+
+Options:
+  --up                      Start the deployment (default)
+  --down                    Tear down the deployment (docker compose down)
+  --skip-chown              Skip chown permission adjustments
+  --bypass-mount-check      Bypass the check ensuring DATA_ROOT is a mounted filesystem
+  -h, --help                Show this help message
+
+Environment Variables:
+  DATA_ROOT                 Path to the storage root (loaded from .env if present)
+HELP
+}
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --up)
+      ACTION="up"
+      shift
+      ;;
+    --down)
+      ACTION="down"
+      shift
+      ;;
+    --skip-chown)
+      SKIP_CHOWN="true"
+      shift
+      ;;
+    --bypass-mount-check)
+      BYPASS_MOUNT_CHECK="true"
+      shift
+      ;;
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    *)
+      log_error "Unknown option: $1"
+      show_help
+      exit 1
+      ;;
+  esac
+done
+
+if [[ "${ACTION}" == "down" ]]; then
+  log_info "Tearing down containerized stack..."
+  docker compose -f "${ROOT_DIR}/docker-compose.yml" down
+  log_success "Teardown complete."
+  exit 0
+fi
+
 # Enforce mandatory DATA_ROOT variable
 if [[ -z "${DATA_ROOT:-}" ]]; then
-  err "DATA_ROOT environment variable is not defined."
-  err "Please specify where Postgres, Prometheus, and Grafana data should be stored."
+  log_error "DATA_ROOT environment variable is not defined."
+  log_error "Please specify where Postgres, Prometheus, and Grafana data should be stored."
   echo ""
   echo "Usage:"
   echo "  DATA_ROOT=/your/data/path ./deploy.sh"
@@ -52,7 +128,7 @@ LOKI_DATA_DIR="${DATA_ROOT}/loki"
 
 ensure_data_root() {
   if [[ ! -d "${DATA_ROOT}" ]]; then
-    err "DATA_ROOT directory does not exist: ${DATA_ROOT}"
+  log_error "DATA_ROOT directory does not exist: ${DATA_ROOT}"
     echo "Please create the directory first or specify a valid existing path."
     echo "Helping command to create it:"
     echo "  sudo mkdir -p ${DATA_ROOT}"
@@ -60,7 +136,7 @@ ensure_data_root() {
   fi
   if [[ "${BYPASS_MOUNT_CHECK:-false}" != "true" ]]; then
     if ! mountpoint -q "${DATA_ROOT}"; then
-      err "DATA_ROOT is not a mounted filesystem: ${DATA_ROOT}"
+  log_error "DATA_ROOT is not a mounted filesystem: ${DATA_ROOT}"
       echo "To bypass this check (e.g. for development or local VM), set BYPASS_MOUNT_CHECK=true."
       echo "Helping Command:"
       echo "  DATA_ROOT=${DATA_ROOT} BYPASS_MOUNT_CHECK=true ./deploy.sh"
@@ -69,42 +145,46 @@ ensure_data_root() {
   fi
 
   # Create directories
-  log "Creating host storage directories..."
+  log_info "Creating host storage directories..."
   run_root mkdir -p "${PROM_DATA_DIR}" "${GRAFANA_DATA_DIR}" "${PG_DATA_DIR}" "${TEMPO_DATA_DIR}" "${LOKI_DATA_DIR}" || true
 
   # Set correct ownership for containerized environments
-  log "Adjusting directory permissions for Docker containers..."
-  
-  # Postgres (UID 70)
-  run_root chown -R 70:70 "${PG_DATA_DIR}" || true
-  
-  # Prometheus (UID 65534 - nobody)
-  run_root chown -R 65534:65534 "${PROM_DATA_DIR}" || true
-  
-  # Grafana (UID 472 - grafana)
-  run_root chown -R 472:472 "${GRAFANA_DATA_DIR}" || true
+  if [[ "${SKIP_CHOWN}" == "true" ]]; then
+    log_info "Skipping directory permission adjustments (--skip-chown)"
+  else
+    log_info "Adjusting directory permissions for Docker containers..."
+    
+    # Postgres (UID 70)
+    run_root chown -R 70:70 "${PG_DATA_DIR}" || true
+    
+    # Prometheus (UID 65534 - nobody)
+    run_root chown -R 65534:65534 "${PROM_DATA_DIR}" || true
+    
+    # Grafana (UID 472 - grafana)
+    run_root chown -R 472:472 "${GRAFANA_DATA_DIR}" || true
 
-  # Tempo (UID 10001 - tempo)
-  run_root chown -R 10001:10001 "${TEMPO_DATA_DIR}" || true
+    # Tempo (UID 10001 - tempo)
+    run_root chown -R 10001:10001 "${TEMPO_DATA_DIR}" || true
 
-  # Loki (UID 10001 - loki uses same uid as tempo)
-  run_root chown -R 10001:10001 "${LOKI_DATA_DIR}" || true
+    # Loki (UID 10001 - loki uses same uid as tempo)
+    run_root chown -R 10001:10001 "${LOKI_DATA_DIR}" || true
+  fi
 }
 
 start_docker_stack() {
-  log "Building and starting containerized stack..."
+  log_info "Building and starting containerized stack..."
   docker compose -f "${ROOT_DIR}/docker-compose.yml" build
 
-  log "Starting database and PgBouncer containers..."
+  log_info "Starting database and PgBouncer containers..."
   docker compose -f "${ROOT_DIR}/docker-compose.yml" up -d db pgbouncer
 
-  log "Waiting for Postgres database to be ready..."
+  log_info "Waiting for Postgres database to be ready..."
   local tries=30
   local wait_s=2
   local postgres_ready=false
   for i in $(seq 1 "${tries}"); do
     if docker exec postgres pg_isready -U postgres -d postgres >/dev/null 2>&1; then
-      log "Postgres is ready"
+  log_info "Postgres is ready"
       postgres_ready=true
       break
     fi
@@ -115,11 +195,11 @@ start_docker_stack() {
     die "Postgres did not become ready in time"
   fi
 
-  log "Waiting for PgBouncer connection pooler to be ready..."
+  log_info "Waiting for PgBouncer connection pooler to be ready..."
   local pgbouncer_ready=false
   for i in $(seq 1 "${tries}"); do
     if docker exec postgres pg_isready -h pgbouncer -p 6432 -U kong >/dev/null 2>&1; then
-      log "PgBouncer is ready"
+  log_info "PgBouncer is ready"
       pgbouncer_ready=true
       break
     fi
@@ -130,24 +210,24 @@ start_docker_stack() {
     die "PgBouncer did not become ready in time"
   fi
 
-  log "Running Kong database migrations..."
+  log_info "Running Kong database migrations..."
   # If the database is already bootstrapped, we will fall back to kong migrations up
   if ! docker compose -f "${ROOT_DIR}/docker-compose.yml" run --rm kong kong migrations bootstrap; then
-    log "Bootstrap failed or already completed. Running kong migrations up..."
+  log_info "Bootstrap failed or already completed. Running kong migrations up..."
     docker compose -f "${ROOT_DIR}/docker-compose.yml" run --rm kong kong migrations up
   fi
 
-  log "Starting all services..."
+  log_info "Starting all services..."
   docker compose -f "${ROOT_DIR}/docker-compose.yml" up -d
 }
 
 wait_for_kong() {
-  log "Waiting for Kong Admin API on http://localhost:8001/status"
+  log_info "Waiting for Kong Admin API on http://localhost:8001/status"
   local tries=60
   local wait_s=2
   for i in $(seq 1 "${tries}"); do
     if curl -fsS http://localhost:8001/status >/dev/null 2>&1; then
-      log "Kong Admin API is up"
+  log_info "Kong Admin API is up"
       return 0
     fi
     sleep "${wait_s}"
@@ -156,7 +236,7 @@ wait_for_kong() {
 }
 
 enable_kong_prometheus() {
-  log "Enabling Kong Prometheus plugin"
+  log_info "Enabling Kong Prometheus plugin"
   local resp
   resp=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8001/plugins \
     --data "name=prometheus" \
@@ -165,9 +245,9 @@ enable_kong_prometheus() {
     --data "config.bandwidth_metrics=true")
   
   if [[ "${resp}" == "201" ]]; then
-    log "Kong Prometheus plugin enabled"
+  log_info "Kong Prometheus plugin enabled"
   elif [[ "${resp}" == "409" ]]; then
-    log "Kong Prometheus plugin already enabled. Updating configuration..."
+  log_info "Kong Prometheus plugin already enabled. Updating configuration..."
     local plugin_id
     plugin_id=$(curl -s "http://localhost:8001/plugins?name=prometheus" | grep -oE '"id":"[0-9a-f-]{36}"' | head -n 1 | cut -d'"' -f4)
     if [[ -n "${plugin_id}" ]]; then
@@ -175,9 +255,9 @@ enable_kong_prometheus() {
         --data "config.status_code_metrics=true" \
         --data "config.latency_metrics=true" \
         --data "config.bandwidth_metrics=true"
-      log "Kong Prometheus plugin configuration updated successfully"
+  log_info "Kong Prometheus plugin configuration updated successfully"
     else
-      warn "Could not determine Prometheus plugin ID to update configuration"
+  log_warn "Could not determine Prometheus plugin ID to update configuration"
     fi
   else
     die "Failed to configure Kong Prometheus plugin (status ${resp})"
@@ -185,7 +265,7 @@ enable_kong_prometheus() {
 }
 
 enable_kong_opentelemetry() {
-  log "Enabling Kong OpenTelemetry plugin"
+  log_info "Enabling Kong OpenTelemetry plugin"
   # Full OTel config: Traces -> Tempo, Logs -> Loki (OTLP), enriched resource attributes
   local otel_config='{"name":"opentelemetry","config":{
     "traces_endpoint":"http://tempo:4318/v1/traces",
@@ -216,9 +296,9 @@ enable_kong_opentelemetry() {
     -d "${otel_config}")
   
   if [[ "${resp}" == "201" ]]; then
-    log "Kong OpenTelemetry plugin enabled (traces + logs)"
+  log_info "Kong OpenTelemetry plugin enabled (traces + logs)"
   elif [[ "${resp}" == "409" ]]; then
-    log "Kong OpenTelemetry plugin already enabled. Updating configuration..."
+  log_info "Kong OpenTelemetry plugin already enabled. Updating configuration..."
     local plugin_id
     plugin_id=$(curl -s "http://localhost:8001/plugins?name=opentelemetry" | grep -oE '"id":"[0-9a-f-]{36}"' | head -n 1 | cut -d'"' -f4)
     if [[ -n "${plugin_id}" ]]; then
@@ -242,9 +322,9 @@ enable_kong_opentelemetry() {
       curl -s -o /dev/null -X PATCH "http://localhost:8001/plugins/${plugin_id}" \
         -H "Content-Type: application/json" \
         -d "${update_config}"
-      log "Kong OpenTelemetry plugin updated (traces + logs)"
+  log_info "Kong OpenTelemetry plugin updated (traces + logs)"
     else
-      warn "Could not determine OpenTelemetry plugin ID to update configuration"
+  log_warn "Could not determine OpenTelemetry plugin ID to update configuration"
     fi
   else
     die "Failed to configure Kong OpenTelemetry plugin (status ${resp})"
@@ -258,14 +338,14 @@ main() {
   enable_kong_prometheus
   enable_kong_opentelemetry
 
-  log "Deployment complete!"
-  log "Kong Proxy:       http://localhost:8000"
-  log "Kong Admin API:   http://localhost:8001"
-  log "Kong Manager:     http://localhost:8002"
-  log "Prometheus:       http://localhost:9090"
-  log "Grafana:          http://localhost:3000"
-  log "Tempo API:        http://localhost:3200"
-  log "Loki API:         http://localhost:3100"
+  log_info "Deployment complete!"
+  log_info "Kong Proxy:       http://localhost:8000"
+  log_info "Kong Admin API:   http://localhost:8001"
+  log_info "Kong Manager:     http://localhost:8002"
+  log_info "Prometheus:       http://localhost:9090"
+  log_info "Grafana:          http://localhost:3000"
+  log_info "Tempo API:        http://localhost:3200"
+  log_info "Loki API:         http://localhost:3100"
 }
 
 main "$@"
