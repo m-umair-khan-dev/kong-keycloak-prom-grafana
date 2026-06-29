@@ -15,13 +15,13 @@ set -euo pipefail
 # List of paths or glob patterns containing GUI/Branding files.
 # All paths are relative to the repository root.
 GUI_PATTERNS=(
-  "kong/rebranded-kong/*"
+  "components/kong/rebranded-kong/*"
 )
 
 # Exception paths within GUI folders that are considered infrastructure.
 GUI_EXCEPTIONS=(
-  "kong/rebranded-kong/Dockerfile"
-  "kong/rebranded-kong/.dockerignore"
+  "components/kong/rebranded-kong/Dockerfile"
+  "components/kong/rebranded-kong/.dockerignore"
 )
 
 # -----------------------------------------------------------------------------
@@ -136,8 +136,16 @@ if [[ "${REF_NAME}" == "main" ]]; then
     git checkout "${target_branch}"
     git pull origin "${target_branch}" --rebase || true
     
-    # Selectively copy only the changed infra files from main
-    git checkout main -- "${INFRA_CHANGES[@]}"
+    # Selectively copy or delete only the changed infra files from main
+    for f in "${INFRA_CHANGES[@]}"; do
+      if git ls-tree -r main --name-only | grep -q "^${f}$"; then
+        git checkout main -- "${f}"
+      else
+        # File was deleted in main, remove it here too
+        git rm -q --ignore-unmatch "${f}" || true
+        rm -f "${f}"
+      fi
+    done
     
     # Check if there are staging changes or working tree changes
     if git diff --quiet && git diff --cached --quiet; then
