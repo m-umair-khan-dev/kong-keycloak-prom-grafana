@@ -103,7 +103,7 @@ start_docker_stack() {
   local wait_s=2
   local postgres_ready=false
   for i in $(seq 1 "${tries}"); do
-    if docker exec postgres pg_isready -U nextgcloud -d postgres >/dev/null 2>&1; then
+    if docker exec postgres pg_isready -U postgres -d postgres >/dev/null 2>&1; then
       log "Postgres is ready"
       postgres_ready=true
       break
@@ -200,7 +200,7 @@ enable_kong_opentelemetry() {
     },
     "propagation":{
       "default_format":"w3c",
-      "extract":["w3c","b3","b3-single"],
+      "extract":["w3c","b3","jaeger"],
       "inject":["w3c"]
     },
     "queue":{
