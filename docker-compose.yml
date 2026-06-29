@@ -15,6 +15,20 @@ services:
     ports:
       - "5432:5432"
 
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: pgbouncer
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    ports:
+      - "6432:6432"
+    networks:
+      - internal-net
+
   kong:
     image: rebranded-kong:3.9
     build:
@@ -23,11 +37,11 @@ services:
     container_name: kong
     restart: always
     depends_on:
-      - db
+      - pgbouncer
     environment:
       KONG_DATABASE: postgres
-      KONG_PG_HOST: db
-      KONG_PG_PORT: 5432
+      KONG_PG_HOST: pgbouncer
+      KONG_PG_PORT: 6432
       KONG_PG_USER: kong
       KONG_PG_PASSWORD: ${KONG_PG_PASSWORD}
       KONG_PG_DATABASE: kong
@@ -55,44 +69,46 @@ services:
     networks:
       - internal-net
 
-  jaeger:
-    image: jaegertracing/all-in-one:1.60
-    container_name: jaeger
+  tempo:
+    image: grafana/tempo:2.6.0
+    container_name: tempo
     restart: always
-    environment:
-      - SPAN_STORAGE_TYPE=elasticsearch
-      - ES_SERVER_URLS=http://opensearch:9200
-    depends_on:
-      - opensearch
+    command: ["-config.file=/etc/tempo/tempo.yml"]
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+      - ${DATA_ROOT}/tempo:/var/tempo
     ports:
-      - "16686:16686"
-      - "4317:4317"
-      - "4318:4318"
+      - "3200:3200"   # Tempo API
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
     networks:
       - internal-net
 
-  opensearch:
-    image: opensearchproject/opensearch:2.11.0
-    container_name: opensearch
+  loki:
+    image: grafana/loki:3.5.0
+    container_name: loki
     restart: always
-    environment:
-      - cluster.name=jaeger-cluster
-      - node.name=opensearch
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
-      - DISABLE_SECURITY_PLUGIN=true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
+    command: ["-config.file=/etc/loki/loki.yml"]
     volumes:
-      - ${DATA_ROOT}/opensearch:/usr/share/opensearch/data
+      - ./loki/loki.yml:/etc/loki/loki.yml:ro
+      - ${DATA_ROOT}/loki:/loki
     ports:
-      - "9200:9200"
+      - "3100:3100"   # Loki HTTP API
+      - "9096:9096"   # Loki gRPC
+    networks:
+      - internal-net
+
+  promtail:
+    image: grafana/promtail:3.5.0
+    container_name: promtail
+    restart: always
+    depends_on:
+      - loki
+    command: ["-config.file=/etc/promtail/promtail.yml"]
+    volumes:
+      - ./promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
     networks:
       - internal-net
 
@@ -101,12 +117,12 @@ services:
     container_name: keycloak
     command: start-dev
     depends_on:
-      - db
+      - pgbouncer
     ports:
       - "8080:8080"
     environment:
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
+      KC_DB_URL: jdbc:postgresql://pgbouncer:6432/keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: ${KC_DB_PASSWORD}
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
@@ -156,8 +172,9 @@ services:
     restart: always
     depends_on:
       - prometheus
-      - db
-      - opensearch
+      - pgbouncer
+      - tempo
+      - loki
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
@@ -168,11 +185,33 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
       GF_DATABASE_TYPE: postgres
-      GF_DATABASE_HOST: db:5432
+      GF_DATABASE_HOST: pgbouncer:6432
       GF_DATABASE_NAME: grafana
       GF_DATABASE_USER: grafana
       GF_DATABASE_PASSWORD: ${GF_DATABASE_PASSWORD}
-      GF_INSTALL_PLUGINS: "grafana-opensearch-datasource"
+    networks:
+      - internal-net
+
+  pg_exporter:
+    image: ghcr.io/nbari/pg_exporter:latest
+    container_name: pg_exporter
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PG_EXPORTER_DSN: "postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/postgres?sslmode=disable"
+    command:
+      - --collector.locks
+      - --collector.database
+      - --collector.stat
+      - --collector.replication
+      - --collector.index
+      - --collector.statements
+      - --collector.tls
+      - --collector.exporter
+      - --collector.activity
+    ports:
+      - "9432:9432"
     networks:
       - internal-net
 
