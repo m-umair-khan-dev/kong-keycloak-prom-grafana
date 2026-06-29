@@ -47,7 +47,8 @@ export DATA_ROOT
 PROM_DATA_DIR="${DATA_ROOT}/prometheus"
 GRAFANA_DATA_DIR="${DATA_ROOT}/grafana"
 PG_DATA_DIR="${DATA_ROOT}/postgres"
-OPENSEARCH_DATA_DIR="${DATA_ROOT}/opensearch"
+TEMPO_DATA_DIR="${DATA_ROOT}/tempo"
+LOKI_DATA_DIR="${DATA_ROOT}/loki"
 
 ensure_data_root() {
   if [[ ! -d "${DATA_ROOT}" ]]; then
@@ -67,15 +68,9 @@ ensure_data_root() {
     fi
   fi
 
-  # Set host virtual memory configuration for OpenSearch
-  log "Configuring host virtual memory map count for OpenSearch..."
-  run_root sysctl -w vm.max_map_count=262144 || true
-
   # Create directories
   log "Creating host storage directories..."
-  if [[ ! -d "${PROM_DATA_DIR}" || ! -d "${GRAFANA_DATA_DIR}" || ! -d "${PG_DATA_DIR}" || ! -d "${OPENSEARCH_DATA_DIR}" ]]; then
-    run_root mkdir -p "${PROM_DATA_DIR}" "${GRAFANA_DATA_DIR}" "${PG_DATA_DIR}" "${OPENSEARCH_DATA_DIR}" || true
-  fi
+  run_root mkdir -p "${PROM_DATA_DIR}" "${GRAFANA_DATA_DIR}" "${PG_DATA_DIR}" "${TEMPO_DATA_DIR}" "${LOKI_DATA_DIR}" || true
 
   # Set correct ownership for containerized environments
   log "Adjusting directory permissions for Docker containers..."
@@ -89,16 +84,19 @@ ensure_data_root() {
   # Grafana (UID 472 - grafana)
   run_root chown -R 472:472 "${GRAFANA_DATA_DIR}" || true
 
-  # OpenSearch (UID 1000 - opensearch)
-  run_root chown -R 1000:1000 "${OPENSEARCH_DATA_DIR}" || true
+  # Tempo (UID 10001 - tempo)
+  run_root chown -R 10001:10001 "${TEMPO_DATA_DIR}" || true
+
+  # Loki (UID 10001 - loki uses same uid as tempo)
+  run_root chown -R 10001:10001 "${LOKI_DATA_DIR}" || true
 }
 
 start_docker_stack() {
   log "Building and starting containerized stack..."
   docker compose -f "${ROOT_DIR}/docker-compose.yml" build
 
-  log "Starting database container..."
-  docker compose -f "${ROOT_DIR}/docker-compose.yml" up -d db
+  log "Starting database and PgBouncer containers..."
+  docker compose -f "${ROOT_DIR}/docker-compose.yml" up -d db pgbouncer
 
   log "Waiting for Postgres database to be ready..."
   local tries=30
@@ -115,6 +113,21 @@ start_docker_stack() {
 
   if [[ "${postgres_ready}" != "true" ]]; then
     die "Postgres did not become ready in time"
+  fi
+
+  log "Waiting for PgBouncer connection pooler to be ready..."
+  local pgbouncer_ready=false
+  for i in $(seq 1 "${tries}"); do
+    if docker exec postgres pg_isready -h pgbouncer -p 6432 -U kong >/dev/null 2>&1; then
+      log "PgBouncer is ready"
+      pgbouncer_ready=true
+      break
+    fi
+    sleep "${wait_s}"
+  done
+
+  if [[ "${pgbouncer_ready}" != "true" ]]; then
+    die "PgBouncer did not become ready in time"
   fi
 
   log "Running Kong database migrations..."
@@ -173,22 +186,63 @@ enable_kong_prometheus() {
 
 enable_kong_opentelemetry() {
   log "Enabling Kong OpenTelemetry plugin"
+  # Full OTel config: Traces -> Tempo, Logs -> Loki (OTLP), enriched resource attributes
+  local otel_config='{"name":"opentelemetry","config":{
+    "traces_endpoint":"http://tempo:4318/v1/traces",
+    "logs_endpoint":"http://loki:3100/otlp/v1/logs",
+    "http_response_header_for_traceid":"X-Trace-Id",
+    "sampling_rate":1.0,
+    "resource_attributes":{
+      "service.name":"kong-gateway",
+      "service.version":"3.9.1",
+      "deployment.environment":"production",
+      "telemetry.sdk.name":"kong"
+    },
+    "propagation":{
+      "default_format":"w3c",
+      "extract":["w3c","b3","b3-single"],
+      "inject":["w3c"]
+    },
+    "queue":{
+      "max_batch_size":200,
+      "max_coalescing_delay":1,
+      "max_entries":10000
+    }
+  }}'
+
   local resp
   resp=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8001/plugins \
     -H "Content-Type: application/json" \
-    -d '{"name": "opentelemetry", "config": {"traces_endpoint": "http://jaeger:4318/v1/traces", "resource_attributes": {"service.name": "kong-gateway"}}}')
+    -d "${otel_config}")
   
   if [[ "${resp}" == "201" ]]; then
-    log "Kong OpenTelemetry plugin enabled"
+    log "Kong OpenTelemetry plugin enabled (traces + logs)"
   elif [[ "${resp}" == "409" ]]; then
     log "Kong OpenTelemetry plugin already enabled. Updating configuration..."
     local plugin_id
     plugin_id=$(curl -s "http://localhost:8001/plugins?name=opentelemetry" | grep -oE '"id":"[0-9a-f-]{36}"' | head -n 1 | cut -d'"' -f4)
     if [[ -n "${plugin_id}" ]]; then
+      local update_config='{"config":{
+        "traces_endpoint":"http://tempo:4318/v1/traces",
+        "logs_endpoint":"http://loki:3100/otlp/v1/logs",
+        "http_response_header_for_traceid":"X-Trace-Id",
+        "sampling_rate":1.0,
+        "resource_attributes":{
+          "service.name":"kong-gateway",
+          "service.version":"3.9.1",
+          "deployment.environment":"production",
+          "telemetry.sdk.name":"kong"
+        },
+        "propagation":{
+          "default_format":"w3c",
+          "extract":["w3c","b3","jaeger"],
+          "inject":["w3c"]
+        }
+      }}'
       curl -s -o /dev/null -X PATCH "http://localhost:8001/plugins/${plugin_id}" \
         -H "Content-Type: application/json" \
-        -d '{"config": {"traces_endpoint": "http://jaeger:4318/v1/traces", "resource_attributes": {"service.name": "kong-gateway"}}}'
-      log "Kong OpenTelemetry plugin configuration updated successfully"
+        -d "${update_config}"
+      log "Kong OpenTelemetry plugin updated (traces + logs)"
     else
       warn "Could not determine OpenTelemetry plugin ID to update configuration"
     fi
@@ -210,7 +264,8 @@ main() {
   log "Kong Manager:     http://localhost:8002"
   log "Prometheus:       http://localhost:9090"
   log "Grafana:          http://localhost:3000"
-  log "Jaeger UI:        http://localhost:16686"
+  log "Tempo API:        http://localhost:3200"
+  log "Loki API:         http://localhost:3100"
 }
 
 main "$@"
