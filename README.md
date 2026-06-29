@@ -8,11 +8,13 @@ Unlike the hybrid systemd model, all services are managed entirely by Docker Com
 
 ## Folder Structure
 
-* **`kong/`**: Clean, unmodified copy of the custom gateway codebase (containing rebranded UI assets and Dockerfile).
-* **`prometheus/`**: Stores containerized Prometheus configuration ([prometheus.yml](./prometheus/prometheus.yml)).
-* **`grafana/`**: Contains Grafana datasource and dashboard provisioning rules, dashboard JSON files, and plugins configuration.
-* **`loki/`**: Contains Loki configuration for OTLP and log storage ([loki.yml](./loki/loki.yml)).
-* **`promtail/`**: Contains Promtail configuration to scrape Kong logs and attach metadata ([promtail.yml](./promtail/promtail.yml)).
+* **`components/`**: Contains configuration and assets for all individual services in the stack:
+  * **`grafana/`**: Contains Grafana datasource and dashboard provisioning rules, dashboard JSON files, and plugins configuration.
+  * **`kong/`**: Clean, unmodified copy of the custom gateway codebase (containing rebranded UI assets and Dockerfile).
+  * **`loki/`**: Contains Loki configuration for OTLP and log storage ([loki.yml](./components/loki/loki.yml)).
+  * **`prometheus/`**: Stores containerized Prometheus configuration ([prometheus.yml](./components/prometheus/prometheus.yml)).
+  * **`promtail/`**: Contains Promtail configuration to scrape Kong logs and attach metadata ([promtail.yml](./components/promtail/promtail.yml)).
+  * **`tempo/`**: Contains Tempo configuration for distributed tracing.
 * **`docker-compose.yml`**: Defines the unified service configuration for all containerized services.
 * **`.env`**: Stores sensitive database passwords and administrative credentials.
 * **`deploy.sh`**: Orchestration shell script to verify host paths, set folder ownership permissions, build/start containers, and initialize metrics collection.
@@ -161,7 +163,7 @@ sudo systemctl enable --now node_exporter
 Make sure the target VM allows incoming traffic on port `9100` from the host VM IP where your Docker stack is running.
 
 ### Step 3: Add targets to Prometheus config
-Edit [prometheus/prometheus.yml](./prometheus/prometheus.yml) on the host machine and append the external IP addresses to the `targets` block under the `node` job:
+Edit [components/prometheus/prometheus.yml](./components/prometheus/prometheus.yml) on the host machine and append the external IP addresses to the `targets` block under the `node` job:
 ```yaml
   - job_name: node
     static_configs:

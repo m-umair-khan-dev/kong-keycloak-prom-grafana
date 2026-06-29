@@ -40,7 +40,7 @@ Metrics provide aggregate numerical data to identify global system performance, 
 *   **Kong Metrics**: Exposes metrics on `http://localhost:8001/metrics` using the bundled `prometheus` plugin.
 *   **Keycloak Metrics**: Emits JVM and authentication metrics on `http://localhost:8080/metrics`.
 *   **Host Metrics**: Collected by `node-exporter` (CPU, memory, disk, network) for host environment monitoring.
-*   **Collector**: Prometheus scrapes all targets every `15s` (configured in [prometheus/prometheus.yml](./prometheus/prometheus.yml)).
+*   **Collector**: Prometheus scrapes all targets every `15s` (configured in [components/prometheus/prometheus.yml](./components/prometheus/prometheus.yml)).
 
 ---
 
@@ -63,7 +63,7 @@ Traces track the execution path of individual requests across system components 
     *   `KONG_TRACING_INSTRUMENTATIONS: all` (Traces the router, balancer, and internal execution).
     *   `KONG_TRACING_SAMPLING_RATE: "1.0"` (Samples 100% of requests for development; tune down for production).
 *   **Exporter**: The Kong `opentelemetry` plugin pushes traces directly to the OTLP/HTTP collector port on Tempo.
-*   **Collector & Backend**: Grafana Tempo (`grafana/tempo`) runs as a lightweight trace ingestion and storage backend:
+*   **Collector & Backend**: Grafana Tempo (`components/tempo`) runs as a lightweight trace ingestion and storage backend:
     *   `http://tempo:4318/v1/traces` (Receives HTTP OTLP spans from Kong).
     *   `http://tempo:4317` (Available for gRPC OTLP exporters).
 
@@ -77,8 +77,8 @@ Grafana consolidates metrics, logs, and tracing databases into a single interfac
 *   **Tempo Tracing Analytics**: A custom dashboard (`tempo-tracing-analytics`) is provisioned showing a traces table and related Loki access logs in a unified view. You can select a specific API route to filter both panels simultaneously.
 *   **Datasources**:
     *   **Prometheus**: The default datasource querying `http://prometheus:9090`.
-    *   **Loki**: The logging datasource querying `http://loki:3100` (provisioned via [loki.yml](./grafana/provisioning/datasources/loki.yml)).
-    *   **Tempo**: The tracing datasource pointing to `http://tempo:3200` (provisioned via [tempo.yml](./grafana/provisioning/datasources/tempo.yml)).
+    *   **Loki**: The logging datasource querying `http://loki:3100` (provisioned via [loki.yml](./components/grafana/provisioning/datasources/loki.yml)).
+    *   **Tempo**: The tracing datasource pointing to `http://tempo:3200` (provisioned via [tempo.yml](./components/grafana/provisioning/datasources/tempo.yml)).
 
 ---
 
