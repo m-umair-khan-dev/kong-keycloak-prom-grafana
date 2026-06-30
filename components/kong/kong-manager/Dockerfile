@@ -51,6 +51,9 @@ RUN luarocks install kong-oidc-v3
 RUN luarocks install kong-openid-connect
 # RUN luarocks install kong-plugin-jwt-keycloak
 
+# Silence harmless Enterprise license checks in OpenTelemetry exporter when running Community edition
+RUN sed -i 's/kong.log.err("cannot read kong.license/kong.log.debug("cannot read kong.license/g' /usr/local/share/lua/5.1/kong/observability/metrics/enterprise/exporter.lua
+
 # # Copy oidcify binary from builder
 # COPY --from=oidcify-builder /build/oidcify /usr/local/bin/oidcify
 
