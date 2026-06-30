@@ -130,8 +130,8 @@ if [[ "${REF_NAME}" == "main" ]]; then
   done
   
   # Configure git bot user
-  git config user.name "github-actions[bot]"
-  git config user.email "github-actions[bot]@users.noreply.github.com"
+  git config user.name "Muhammad Umair Khan"
+  git config user.email "umair.ims19@gmail.com"
   
   # Sync to each target branch
   for target_branch in "${BRANDING_BRANCHES[@]}"; do
