@@ -87,7 +87,7 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^version$/",
+          "fields": "/^service_version$/",
           "values": false
         },
         "textMode": "value",
@@ -101,7 +101,7 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "kong_node_info{instance=~\"$instance\"}",
+          "expr": "target_info{instance=~\"$instance\"}",
           "legendFormat": "",
           "range": true,
           "refId": "A"
@@ -115,7 +115,7 @@
           "options": {
             "mode": "columns",
             "keepLabels": [
-              "version"
+              "service_version"
             ]
           }
         }
@@ -194,7 +194,7 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "kong_datastore_reachable{instance=~\"$instance\"}",
+          "expr": "kong_db_connection_status_ratio{instance=~\"$instance\"}",
           "legendFormat": "",
           "range": true,
           "refId": "A"
@@ -265,7 +265,7 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(rate(kong_http_requests_total{instance=~\"$instance\"}[1m]))",
+          "expr": "sum(rate(http_server_request_count_total{instance=~\"$instance\"}[1m]))",
           "legendFormat": "",
           "range": true,
           "refId": "A"
@@ -336,7 +336,7 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(rate(kong_http_requests_total{code=~\"[45]..\",instance=~\"$instance\"}[1m])) / sum(rate(kong_http_requests_total{instance=~\"$instance\"}[1m])) * 100",
+          "expr": "sum(rate(http_server_request_count_total{http_response_status_code=~\"[45]..\",instance=~\"$instance\"}[1m])) / sum(rate(http_server_request_count_total{instance=~\"$instance\"}[1m])) * 100",
           "legendFormat": "",
           "range": true,
           "refId": "A"
@@ -407,7 +407,7 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(rate(kong_http_requests_total{code=~\"[23]..\",instance=~\"$instance\"}[1m])) / sum(rate(kong_http_requests_total{instance=~\"$instance\"}[1m])) * 100",
+          "expr": "sum(rate(http_server_request_count_total{http_response_status_code=~\"[23]..\",instance=~\"$instance\"}[1m])) / sum(rate(http_server_request_count_total{instance=~\"$instance\"}[1m])) * 100",
           "legendFormat": "",
           "range": true,
           "refId": "A"
@@ -521,7 +521,7 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(rate(kong_http_requests_total{instance=~\"$instance\"}[1m]))",
+          "expr": "sum(rate(http_server_request_count_total{instance=~\"$instance\"}[1m]))",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "Requests/second",
@@ -624,10 +624,10 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(rate(kong_http_requests_total{service=~\"$service\", route=~\"$route\", instance=~\"$instance\"}[1m])) by (service)",
+          "expr": "sum(rate(http_server_request_count_total{kong_service_name=~\"$service\", kong_route_name=~\"$route\", instance=~\"$instance\"}[1m])) by (kong_service_name)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "service:{{service}}",
+          "legendFormat": "service:{{kong_service_name}}",
           "range": true,
           "refId": "A"
         },
@@ -637,10 +637,10 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(rate(kong_http_requests_total{service=~\"$service\", route=~\"$route\", instance=~\"$instance\"}[1m])) by (route)",
+          "expr": "sum(rate(http_server_request_count_total{kong_service_name=~\"$service\", kong_route_name=~\"$route\", instance=~\"$instance\"}[1m])) by (kong_route_name)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "route:{{route}}",
+          "legendFormat": "route:{{kong_route_name}}",
           "range": true,
           "refId": "B"
         }
@@ -740,10 +740,10 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(rate(kong_http_requests_total{service=~\"$service\", route=~\"$route\", instance=~\"$instance\"}[1m])) by (service,code)",
+          "expr": "sum(rate(http_server_request_count_total{kong_service_name=~\"$service\", kong_route_name=~\"$route\", instance=~\"$instance\"}[1m])) by (kong_service_name,http_response_status_code)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "service:{{service}}-{{code}}",
+          "legendFormat": "service:{{kong_service_name}}-{{http_response_status_code}}",
           "range": true,
           "refId": "A"
         },
@@ -753,10 +753,10 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(rate(kong_http_requests_total{service=~\"$service\", route=~\"$route\", instance=~\"$instance\"}[1m])) by (route,code)",
+          "expr": "sum(rate(http_server_request_count_total{kong_service_name=~\"$service\", kong_route_name=~\"$route\", instance=~\"$instance\"}[1m])) by (kong_route_name,http_response_status_code)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "route:{{route}}-{{code}}",
+          "legendFormat": "route:{{kong_route_name}}-{{http_response_status_code}}",
           "range": true,
           "refId": "B"
         }
@@ -869,10 +869,10 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(rate(kong_http_requests_total{code=~\"4..\",service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (service)",
+          "expr": "sum(rate(http_server_request_count_total{http_response_status_code=~\"4..\",kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_service_name)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "4xx-{{service}}",
+          "legendFormat": "4xx-{{kong_service_name}}",
           "range": true,
           "refId": "A"
         },
@@ -882,10 +882,10 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(rate(kong_http_requests_total{code=~\"5..\",service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (service)",
+          "expr": "sum(rate(http_server_request_count_total{http_response_status_code=~\"5..\",kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_service_name)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "5xx-{{service}}",
+          "legendFormat": "5xx-{{kong_service_name}}",
           "range": true,
           "refId": "B"
         }
@@ -985,7 +985,7 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(rate(kong_http_requests_total{code=~\"[45]..\",service=~\"$service\",instance=~\"$instance\"}[1m])) / sum(rate(kong_http_requests_total{service=~\"$service\",instance=~\"$instance\"}[1m])) * 100",
+          "expr": "sum(rate(http_server_request_count_total{http_response_status_code=~\"[45]..\",kong_service_name=~\"$service\",instance=~\"$instance\"}[1m])) / sum(rate(http_server_request_count_total{kong_service_name=~\"$service\",instance=~\"$instance\"}[1m])) * 100",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "error %",
@@ -1131,7 +1131,7 @@
                   }
                 ]
               },
-              "unit": "ms"
+              "unit": "s"
             },
             "overrides": []
           },
@@ -1164,7 +1164,7 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "histogram_quantile(0.90, sum(rate(kong_kong_latency_ms_bucket{instance=~\"$instance\"}[1m])) by (le))",
+              "expr": "histogram_quantile(0.90, sum(rate(kong_latency_total_seconds_bucket{instance=~\"$instance\"}[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "p90",
@@ -1177,7 +1177,7 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "histogram_quantile(0.95, sum(rate(kong_kong_latency_ms_bucket{instance=~\"$instance\"}[1m])) by (le))",
+              "expr": "histogram_quantile(0.95, sum(rate(kong_latency_total_seconds_bucket{instance=~\"$instance\"}[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "p95",
@@ -1190,7 +1190,7 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "histogram_quantile(0.99, sum(rate(kong_kong_latency_ms_bucket{instance=~\"$instance\"}[1m])) by (le))",
+              "expr": "histogram_quantile(0.99, sum(rate(kong_latency_total_seconds_bucket{instance=~\"$instance\"}[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "p99",
@@ -1203,7 +1203,7 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "rate(kong_kong_latency_ms_sum{instance=~\"$instance\"}[1m]) / rate(kong_kong_latency_ms_count{instance=~\"$instance\"}[1m])",
+              "expr": "rate(kong_latency_total_seconds_sum{instance=~\"$instance\"}[1m]) / rate(kong_latency_total_seconds_count{instance=~\"$instance\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "avg",
@@ -1273,7 +1273,7 @@
                   }
                 ]
               },
-              "unit": "ms"
+              "unit": "s"
             },
             "overrides": []
           },
@@ -1305,10 +1305,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.90, sum(rate(kong_kong_latency_ms_bucket{ service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (service,le))",
+              "expr": "histogram_quantile(0.90, sum(rate(kong_latency_total_seconds_bucket{ kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_service_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p90-{{service}}",
+              "legendFormat": "p90-{{kong_service_name}}",
               "refId": "A"
             },
             {
@@ -1316,10 +1316,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.95, sum(rate(kong_kong_latency_ms_bucket{ service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (service,le))",
+              "expr": "histogram_quantile(0.95, sum(rate(kong_latency_total_seconds_bucket{ kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_service_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p95-{{service}}",
+              "legendFormat": "p95-{{kong_service_name}}",
               "refId": "B"
             },
             {
@@ -1327,10 +1327,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.99, sum(rate(kong_kong_latency_ms_bucket{ service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (service,le))",
+              "expr": "histogram_quantile(0.99, sum(rate(kong_latency_total_seconds_bucket{ kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_service_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p99-{{service}}",
+              "legendFormat": "p99-{{kong_service_name}}",
               "refId": "C"
             },
             {
@@ -1339,10 +1339,10 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "rate(kong_kong_latency_ms_sum{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m]) / rate(kong_kong_latency_ms_count{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])",
+              "expr": "rate(kong_latency_total_seconds_sum{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m]) / rate(kong_latency_total_seconds_count{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "avg-{{service}}",
+              "legendFormat": "avg-{{kong_service_name}}",
               "range": true,
               "refId": "D"
             }
@@ -1409,7 +1409,7 @@
                   }
                 ]
               },
-              "unit": "ms"
+              "unit": "s"
             },
             "overrides": []
           },
@@ -1441,10 +1441,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.90, sum(rate(kong_kong_latency_ms_bucket{ service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (route,le))",
+              "expr": "histogram_quantile(0.90, sum(rate(kong_latency_total_seconds_bucket{ kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_route_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p90-{{route}}",
+              "legendFormat": "p90-{{kong_route_name}}",
               "refId": "A"
             },
             {
@@ -1452,10 +1452,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.95, sum(rate(kong_kong_latency_ms_bucket{ service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (route,le))",
+              "expr": "histogram_quantile(0.95, sum(rate(kong_latency_total_seconds_bucket{ kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_route_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p95-{{route}}",
+              "legendFormat": "p95-{{kong_route_name}}",
               "refId": "B"
             },
             {
@@ -1463,10 +1463,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.99, sum(rate(kong_kong_latency_ms_bucket{ service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (route,le))",
+              "expr": "histogram_quantile(0.99, sum(rate(kong_latency_total_seconds_bucket{ kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_route_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p99-{{route}}",
+              "legendFormat": "p99-{{kong_route_name}}",
               "refId": "C"
             },
             {
@@ -1475,10 +1475,10 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "rate(kong_kong_latency_ms_sum{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m]) / rate(kong_kong_latency_ms_count{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])",
+              "expr": "rate(kong_latency_total_seconds_sum{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m]) / rate(kong_latency_total_seconds_count{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "avg-{{route}}",
+              "legendFormat": "avg-{{kong_route_name}}",
               "range": true,
               "refId": "D"
             }
@@ -1545,7 +1545,7 @@
                   }
                 ]
               },
-              "unit": "ms"
+              "unit": "s"
             },
             "overrides": []
           },
@@ -1577,7 +1577,7 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.90, sum(rate(kong_request_latency_ms_bucket{}[1m])) by (le))",
+              "expr": "histogram_quantile(0.90, sum(rate(kong_latency_internal_seconds_bucket{}[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "p90",
@@ -1588,7 +1588,7 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.95, sum(rate(kong_request_latency_ms_bucket{}[1m])) by (le))",
+              "expr": "histogram_quantile(0.95, sum(rate(kong_latency_internal_seconds_bucket{}[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "p95",
@@ -1599,7 +1599,7 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.99, sum(rate(kong_request_latency_ms_bucket{}[1m])) by (le))",
+              "expr": "histogram_quantile(0.99, sum(rate(kong_latency_internal_seconds_bucket{}[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "p99",
@@ -1611,7 +1611,7 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "rate(kong_request_latency_ms_sum[1m]) / rate(kong_request_latency_ms_count[1m])",
+              "expr": "rate(kong_latency_internal_seconds_sum[1m]) / rate(kong_latency_internal_seconds_count[1m])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "avg",
@@ -1681,7 +1681,7 @@
                   }
                 ]
               },
-              "unit": "ms"
+              "unit": "s"
             },
             "overrides": []
           },
@@ -1713,10 +1713,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.90, sum(rate(kong_request_latency_ms_bucket{service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (service,le))",
+              "expr": "histogram_quantile(0.90, sum(rate(kong_latency_internal_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_service_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p90-{{service}}",
+              "legendFormat": "p90-{{kong_service_name}}",
               "refId": "A"
             },
             {
@@ -1724,10 +1724,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.95, sum(rate(kong_request_latency_ms_bucket{service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (service,le))",
+              "expr": "histogram_quantile(0.95, sum(rate(kong_latency_internal_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_service_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p95-{{service}}",
+              "legendFormat": "p95-{{kong_service_name}}",
               "refId": "B"
             },
             {
@@ -1735,10 +1735,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.99, sum(rate(kong_request_latency_ms_bucket{service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (service,le))",
+              "expr": "histogram_quantile(0.99, sum(rate(kong_latency_internal_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_service_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p99-{{service}}",
+              "legendFormat": "p99-{{kong_service_name}}",
               "refId": "C"
             },
             {
@@ -1747,10 +1747,10 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "rate(kong_request_latency_ms_sum{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m]) / rate(kong_request_latency_ms_count{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])",
+              "expr": "rate(kong_latency_internal_seconds_sum{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m]) / rate(kong_latency_internal_seconds_count{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "avg-{{service}}",
+              "legendFormat": "avg-{{kong_service_name}}",
               "range": true,
               "refId": "D"
             }
@@ -1817,7 +1817,7 @@
                   }
                 ]
               },
-              "unit": "ms"
+              "unit": "s"
             },
             "overrides": []
           },
@@ -1849,10 +1849,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.90, sum(rate(kong_request_latency_ms_bucket{service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (route,le))",
+              "expr": "histogram_quantile(0.90, sum(rate(kong_latency_internal_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_route_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p90-{{route}}",
+              "legendFormat": "p90-{{kong_route_name}}",
               "refId": "A"
             },
             {
@@ -1860,10 +1860,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.95, sum(rate(kong_request_latency_ms_bucket{service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (route,le))",
+              "expr": "histogram_quantile(0.95, sum(rate(kong_latency_internal_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_route_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p95-{{route}}",
+              "legendFormat": "p95-{{kong_route_name}}",
               "refId": "B"
             },
             {
@@ -1871,10 +1871,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.99, sum(rate(kong_request_latency_ms_bucket{service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (route,le))",
+              "expr": "histogram_quantile(0.99, sum(rate(kong_latency_internal_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_route_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p99-{{route}}",
+              "legendFormat": "p99-{{kong_route_name}}",
               "refId": "C"
             },
             {
@@ -1883,10 +1883,10 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "rate(kong_request_latency_ms_sum{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m]) / rate(kong_request_latency_ms_count{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])",
+              "expr": "rate(kong_latency_internal_seconds_sum{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m]) / rate(kong_latency_internal_seconds_count{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "avg-{{route}}",
+              "legendFormat": "avg-{{kong_route_name}}",
               "range": true,
               "refId": "D"
             }
@@ -1953,7 +1953,7 @@
                   }
                 ]
               },
-              "unit": "ms"
+              "unit": "s"
             },
             "overrides": []
           },
@@ -1986,7 +1986,7 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "histogram_quantile(0.90, sum(rate(kong_upstream_latency_ms_bucket{}[1m])) by (le))",
+              "expr": "histogram_quantile(0.90, sum(rate(kong_latency_upstream_seconds_bucket{}[1m])) by (le))",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -2000,7 +2000,7 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "histogram_quantile(0.95, sum(rate(kong_upstream_latency_ms_bucket{}[1m])) by (le))",
+              "expr": "histogram_quantile(0.95, sum(rate(kong_latency_upstream_seconds_bucket{}[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "p95",
@@ -2013,7 +2013,7 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "histogram_quantile(0.99, sum(rate(kong_upstream_latency_ms_bucket{}[1m])) by (le))",
+              "expr": "histogram_quantile(0.99, sum(rate(kong_latency_upstream_seconds_bucket{}[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "p99",
@@ -2026,7 +2026,7 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "rate(kong_upstream_latency_ms_sum[1m]) / rate(kong_upstream_latency_ms_count[1m])",
+              "expr": "rate(kong_latency_upstream_seconds_sum[1m]) / rate(kong_latency_upstream_seconds_count[1m])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "avg",
@@ -2096,7 +2096,7 @@
                   }
                 ]
               },
-              "unit": "ms"
+              "unit": "s"
             },
             "overrides": []
           },
@@ -2128,11 +2128,11 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.90, sum(rate(kong_upstream_latency_ms_bucket{service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (service,le))",
+              "expr": "histogram_quantile(0.90, sum(rate(kong_latency_upstream_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_service_name,le))",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "p90-{{service}}",
+              "legendFormat": "p90-{{kong_service_name}}",
               "refId": "A"
             },
             {
@@ -2140,10 +2140,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.95, sum(rate(kong_upstream_latency_ms_bucket{service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (service,le))",
+              "expr": "histogram_quantile(0.95, sum(rate(kong_latency_upstream_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_service_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p95-{{service}}",
+              "legendFormat": "p95-{{kong_service_name}}",
               "refId": "B"
             },
             {
@@ -2151,10 +2151,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.99, sum(rate(kong_upstream_latency_ms_bucket{service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (service,le))",
+              "expr": "histogram_quantile(0.99, sum(rate(kong_latency_upstream_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_service_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p99-{{service}}",
+              "legendFormat": "p99-{{kong_service_name}}",
               "refId": "C"
             },
             {
@@ -2163,10 +2163,10 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "rate(kong_upstream_latency_ms_sum{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m]) / rate(kong_upstream_latency_ms_count{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])",
+              "expr": "rate(kong_latency_upstream_seconds_sum{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m]) / rate(kong_latency_upstream_seconds_count{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "avg-{{service}}",
+              "legendFormat": "avg-{{kong_service_name}}",
               "range": true,
               "refId": "D"
             }
@@ -2233,7 +2233,7 @@
                   }
                 ]
               },
-              "unit": "ms"
+              "unit": "s"
             },
             "overrides": []
           },
@@ -2265,11 +2265,11 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.90, sum(rate(kong_upstream_latency_ms_bucket{service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (route,le))",
+              "expr": "histogram_quantile(0.90, sum(rate(kong_latency_upstream_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_route_name,le))",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "p90-{{route}}",
+              "legendFormat": "p90-{{kong_route_name}}",
               "refId": "A"
             },
             {
@@ -2277,10 +2277,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.95, sum(rate(kong_upstream_latency_ms_bucket{service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (route,le))",
+              "expr": "histogram_quantile(0.95, sum(rate(kong_latency_upstream_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_route_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p95-{{route}}",
+              "legendFormat": "p95-{{kong_route_name}}",
               "refId": "B"
             },
             {
@@ -2288,10 +2288,10 @@
                 "type": "prometheus",
                 "uid": "cf5ynk7bnqepse"
               },
-              "expr": "histogram_quantile(0.99, sum(rate(kong_upstream_latency_ms_bucket{service =~ \"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (route,le))",
+              "expr": "histogram_quantile(0.99, sum(rate(kong_latency_upstream_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_route_name,le))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "p99-{{route}}",
+              "legendFormat": "p99-{{kong_route_name}}",
               "refId": "C"
             },
             {
@@ -2300,10 +2300,10 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "rate(kong_upstream_latency_ms_sum{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m]) / rate(kong_upstream_latency_ms_count{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])",
+              "expr": "rate(kong_latency_upstream_seconds_sum{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m]) / rate(kong_latency_upstream_seconds_count{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "avg-{{route}}",
+              "legendFormat": "avg-{{kong_route_name}}",
               "range": true,
               "refId": "D"
             }
@@ -2377,7 +2377,7 @@
               "axisLabel": "Latency (ms)",
               "axisPlacement": "left",
               "reverse": false,
-              "unit": "ms"
+              "unit": "s"
             }
           },
           "pluginVersion": "12.3.0",
@@ -2388,7 +2388,7 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "sum(increase(kong_request_latency_ms_bucket{service=~\"$service\",route=~\"$route\",instance=~\"$instance\"}[$__rate_interval])) by (le)",
+              "expr": "sum(increase(kong_latency_internal_seconds_bucket{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[$__rate_interval])) by (le)",
               "format": "heatmap",
               "legendFormat": "{{le}}",
               "range": true,
@@ -2464,7 +2464,7 @@
               "axisLabel": "Latency (ms)",
               "axisPlacement": "left",
               "reverse": false,
-              "unit": "ms"
+              "unit": "s"
             }
           },
           "pluginVersion": "12.3.0",
@@ -2475,7 +2475,7 @@
                 "uid": "cf5ynk7bnqepse"
               },
               "editorMode": "code",
-              "expr": "sum(increase(kong_kong_latency_ms_bucket{instance=~\"$instance\"}[$__rate_interval])) by (le)",
+              "expr": "sum(increase(kong_latency_total_seconds_bucket{instance=~\"$instance\"}[$__rate_interval])) by (le)",
               "format": "heatmap",
               "legendFormat": "{{le}}",
               "range": true,
@@ -2599,7 +2599,7 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(irate(kong_bandwidth_bytes{instance=~\"$instance\"}[1m])) by (direction)",
+          "expr": "sum(irate(http_server_response_size_bytes_sum{instance=~\"$instance\"}[1m])) by (direction)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{direction}}",
@@ -2702,10 +2702,10 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(irate(kong_bandwidth_bytes{direction=\"egress\", service =~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (service)",
+          "expr": "sum(irate(http_server_response_size_bytes_sum{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_service_name)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "service:{{service}}",
+          "legendFormat": "service:{{kong_service_name}}",
           "range": true,
           "refId": "A"
         },
@@ -2715,10 +2715,10 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(irate(kong_bandwidth_bytes{direction=\"egress\", service =~\"$service\",route=~\"$route\",instance=~\"$instance\"}[1m])) by (route)",
+          "expr": "sum(irate(http_server_response_size_bytes_sum{kong_service_name=~\"$service\",kong_route_name=~\"$route\",instance=~\"$instance\"}[1m])) by (kong_route_name)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "route:{{route}}",
+          "legendFormat": "route:{{kong_route_name}}",
           "range": true,
           "refId": "B"
         }
@@ -2818,10 +2818,10 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(irate(kong_bandwidth_bytes{direction=\"ingress\", service =~\"$service\"}[1m])) by (service)",
+          "expr": "sum(irate(http_server_request_size_bytes_sum{kong_service_name=~\"$service\"}[1m])) by (kong_service_name)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "serive:{{service}}",
+          "legendFormat": "serive:{{kong_service_name}}",
           "range": true,
           "refId": "A"
         },
@@ -2831,11 +2831,11 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(irate(kong_bandwidth_bytes{direction=\"ingress\", service =~\"$service\", route=~\"$route\"}[1m])) by (route)",
+          "expr": "sum(irate(http_server_request_size_bytes_sum{kong_service_name=~\"$service\", kong_route_name=~\"$route\"}[1m])) by (kong_route_name)",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "route:{{route}}",
+          "legendFormat": "route:{{kong_route_name}}",
           "range": true,
           "refId": "B"
         }
@@ -2948,10 +2948,10 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "kong_memory_workers_lua_vms_bytes{instance=~\"$instance\"}",
+          "expr": "kong_memory_workers_lua_vm_bytes{instance=~\"$instance\"}",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "pid:{{pid}}",
+          "legendFormat": "pid:{{kong_pid}}",
           "range": true,
           "refId": "A"
         }
@@ -3026,8 +3026,8 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "kong_memory_lua_shared_dict_bytes{instance=~\"$instance\"} / kong_memory_lua_shared_dict_total_bytes{instance=~\"$instance\"} * 100",
-          "legendFormat": "{{shared_dict}}",
+          "expr": "kong_shared_dict_usage_bytes{instance=~\"$instance\"} / kong_shared_dict_size_bytes{instance=~\"$instance\"} * 100",
+          "legendFormat": "{{kong_shared_dict_name}}",
           "range": true,
           "refId": "A"
         }
@@ -3140,10 +3140,10 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(kong_nginx_connections_total{state=~\"active|reading|writing|waiting\", instance=~\"$instance\"}) by (state)",
+          "expr": "sum(kong_nginx_connection_count{kong_connection_state=~\"active|reading|writing|waiting\", instance=~\"$instance\"}) by (kong_connection_state)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{state}}",
+          "legendFormat": "{{kong_connection_state}}",
           "range": true,
           "refId": "A"
         }
@@ -3224,7 +3224,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum(kong_nginx_connections_total{state=\"total\", instance=~\"$instance\"})",
+          "expr": "sum(kong_nginx_connection_count{kong_connection_state=\"total\", instance=~\"$instance\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -3308,7 +3308,7 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(kong_nginx_connections_total{state=\"handled\", instance=~\"$instance\"})",
+          "expr": "sum(kong_nginx_connection_count{kong_connection_state=\"handled\", instance=~\"$instance\"})",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "Handled",
@@ -3410,10 +3410,10 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "kong_nginx_timers{instance=~\"$instance\"}",
+          "expr": "kong_nginx_timer_count{instance=~\"$instance\"}",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{state}}",
+          "legendFormat": "{{kong_timer_state}}",
           "range": true,
           "refId": "A"
         }
@@ -3482,13 +3482,220 @@
             "uid": "cf5ynk7bnqepse"
           },
           "editorMode": "code",
-          "expr": "sum(kong_nginx_connections_total{state=\"total\", instance=~\"$instance\"}) - sum(kong_nginx_connections_total{state=\"handled\", instance=~\"$instance\"})",
+          "expr": "sum(kong_nginx_connection_count{kong_connection_state=\"total\", instance=~\"$instance\"}) - sum(kong_nginx_connection_count{kong_connection_state=\"handled\", instance=~\"$instance\"})",
           "legendFormat": "dropped",
           "range": true,
           "refId": "A"
         }
       ],
       "title": "Dropped Connections",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 97
+      },
+      "id": 58,
+      "panels": [],
+      "title": "Database & Licensing",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf5ynk7bnqepse"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 98
+      },
+      "id": 59,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cf5ynk7bnqepse"
+          },
+          "editorMode": "code",
+          "expr": "sum(kong_db_entity_count{instance=~\"$instance\"})",
+          "format": "time_series",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "DB Entity Count",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf5ynk7bnqepse"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 98
+      },
+      "id": 60,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cf5ynk7bnqepse"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(kong_db_entity_error_count_total{instance=~\"$instance\"}[1m]))",
+          "format": "time_series",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "DB Entity Error Rate / sec",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf5ynk7bnqepse"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 98
+      },
+      "id": 61,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cf5ynk7bnqepse"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(kong_ee_license_error_count_total{instance=~\"$instance\"}[1m]))",
+          "format": "time_series",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "License Error Rate / sec",
       "type": "stat"
     }
   ],
@@ -3510,13 +3717,13 @@
           "type": "prometheus",
           "uid": "cf5ynk7bnqepse"
         },
-        "definition": "label_values(kong_http_requests_total,service)",
+        "definition": "label_values(http_server_request_count_total,service)",
         "includeAll": true,
         "multi": true,
         "name": "service",
         "options": [],
         "query": {
-          "query": "label_values(kong_http_requests_total,service)",
+          "query": "label_values(http_server_request_count_total, kong_service_name)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
@@ -3536,13 +3743,13 @@
           "type": "prometheus",
           "uid": "cf5ynk7bnqepse"
         },
-        "definition": "label_values(kong_nginx_connections_total,instance)",
+        "definition": "label_values(http_server_request_count_total,instance)",
         "includeAll": true,
         "multi": true,
         "name": "instance",
         "options": [],
         "query": {
-          "query": "label_values(kong_nginx_connections_total,instance)",
+          "query": "label_values(http_server_request_count_total,instance)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 2,
@@ -3562,14 +3769,14 @@
           "type": "prometheus",
           "uid": "cf5ynk7bnqepse"
         },
-        "definition": "label_values(kong_http_requests_total,route)",
+        "definition": "label_values(http_server_request_count_total,route)",
         "description": "Ingress",
         "includeAll": true,
         "multi": true,
         "name": "route",
         "options": [],
         "query": {
-          "query": "label_values(kong_http_requests_total,route)",
+          "query": "label_values(http_server_request_count_total, kong_route_name)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
@@ -3592,7 +3799,7 @@
         "name": "upstream",
         "options": [],
         "query": {
-          "query": "label_values(kong_upstream_target_health, upstream)",
+          "query": "label_values(kong_latency_upstream_seconds_count, kong_upstream_target_health)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
