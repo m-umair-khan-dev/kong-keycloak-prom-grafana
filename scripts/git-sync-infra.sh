@@ -118,12 +118,8 @@ if [[ "${REF_NAME}" == "main" ]]; then
   # Filter out the GUI directories from propagating to branding branches
   INFRA_CHANGES=()
   for file in ${CHANGED_FILES}; do
-    if [[ "$file" == components/kong/rebranded-kong/* ]]; then
-      echo "[INFO] Skipping sync for rebranded-kong files (deleted in main)"
-      continue
-    fi
-    if [[ "$file" == components/kong/kong-manager/* ]]; then
-      echo "[INFO] Skipping sync for kong-manager files (new in main)"
+    if [[ "$file" == components/kong/* ]]; then
+      echo "[INFO] Skipping sync for Kong files (${file})"
       continue
     fi
     INFRA_CHANGES+=("$file")
