@@ -224,7 +224,7 @@
             "type": "loki",
             "uid": "loki-datasource"
           },
-          "expr": "{service_name=\"kong-gateway\", job=\"kong_access\", route=~\"${route:raw}\"}",
+          "expr": "{service_name=\"kong-gateway\", log_type=\"access\", kong_route_name=~\"${route:raw}\"}",
           "queryType": "range",
           "refId": "A"
         }

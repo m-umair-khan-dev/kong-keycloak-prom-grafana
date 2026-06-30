@@ -13,14 +13,14 @@ graph TD
     Client[Client Request] -->|Port 8000| Kong[Kong API Gateway]
     
     %% Metrics Collection
-    Kong -->|Push OTLP Metrics :9090| Prometheus[(Prometheus)]
+    Prometheus[(Prometheus)] -->|Pull Scrape /metrics:8001| Kong
     Prometheus -->|Pull Scrape /metrics:8080| Keycloak[Keycloak]
     Prometheus -->|Pull Scrape :9100| Node[Node Exporter]
     
     %% Logs Collection
-    Promtail[Promtail Agent] -->|Scrape stdout/stderr logs| AllContainers[All Containers]
+    Promtail[Promtail Agent] -->|Scrape stdout logs| Kong
     Promtail -->|Push Logs :3100| Loki[(Grafana Loki)]
-    Kong -->|Push OTLP Access & System Logs :3100| Loki
+    Kong -->|Push OTLP System Logs :3100| Loki
     
     %% Tracing Collection
     Kong -->|Push OTLP Traces :4318| Tempo[(Grafana Tempo)]
@@ -37,10 +37,10 @@ graph TD
 
 Metrics provide aggregate numerical data to identify global system performance, error rates, and resource utilization.
 
-*   **Kong Metrics**: Kong Gateway uses its OpenTelemetry plugin to push OTLP metrics natively to Prometheus on port `9090` (Prometheus 3.0 with `--web.enable-otlp-receiver`).
+*   **Kong Metrics**: Exposes metrics on `http://localhost:8001/metrics` using the bundled `prometheus` plugin.
 *   **Keycloak Metrics**: Emits JVM and authentication metrics on `http://localhost:8080/metrics`.
 *   **Host Metrics**: Collected by `node-exporter` (CPU, memory, disk, network) for host environment monitoring.
-*   **Collector**: Prometheus accepts OTLP push metrics directly, and independently scrapes standard targets every `15s` (configured in [components/prometheus/prometheus.yml](./components/prometheus/prometheus.yml)).
+*   **Collector**: Prometheus scrapes all targets every `15s` (configured in [components/prometheus/prometheus.yml](./components/prometheus/prometheus.yml)).
 
 ---
 
@@ -48,8 +48,9 @@ Metrics provide aggregate numerical data to identify global system performance, 
 
 Logs capture detailed events from requests, errors, and system status.
 
-*   **OTLP Direct Access Logging**: Kong Gateway uses its OpenTelemetry plugin to send natively structured access logs (traffic analytics) and runtime system logs directly to Loki via OTLP (`http://loki:3100/otlp/v1/logs`).
-*   **Infrastructure Logs Scraper (Promtail)**: Runs as an agent container that automatically discovers all stack containers (Keycloak, Postgres, PgBouncer, etc.). It reads container standard output and forwards them to Loki. For Kong specifically, it drops `stdout` (to prevent duplicating OTel access logs) but retains `stderr` to catch fatal crashes.
+*   **Access Logs Scraper (Promtail)**: Runs as an agent container that automatically discovers the `kong` container. It reads the container's standard output (Nginx proxy access logs), extracts metadata labels (`route`, `method`, `status`, `container`, `service_name`), and forwards them to Loki.
+*   **OTLP Direct Log Ingestion**: Loki accepts direct OTLP log transmissions on `http://loki:3100/otlp/v1/logs`. The Kong OpenTelemetry plugin uses this endpoint to ship gateway system and process events.
+*   **Spam Filtering**: Promtail is configured to automatically drop noisy Prometheus metric scrapes (`/metrics`), status check requests (`/status`), and Keycloak health pings (`/health`) so they do not clutter the logs database.
 *   **Log-to-Trace Linkage**: Logs are automatically correlated with distributed traces. When viewing logs in Grafana, any line containing a `traceID` receives a clickable link that opens the corresponding trace in Tempo.
 
 ---

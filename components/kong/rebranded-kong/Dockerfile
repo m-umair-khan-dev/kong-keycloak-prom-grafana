@@ -35,7 +35,7 @@ RUN pnpm build
 
 
 # Stage 3: Kong Runtime
-FROM kong:3.9.1
+FROM kong/kong-gateway:3.14
 
 USER root
 
