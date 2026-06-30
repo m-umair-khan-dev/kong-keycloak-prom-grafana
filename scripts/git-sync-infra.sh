@@ -14,15 +14,10 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 # List of paths or glob patterns containing GUI/Branding files.
 # All paths are relative to the repository root.
-GUI_PATTERNS=(
-  "components/kong/rebranded-kong/*"
-)
+GUI_PATTERNS=()
 
 # Exception paths within GUI folders that are considered infrastructure.
-GUI_EXCEPTIONS=(
-  "components/kong/rebranded-kong/Dockerfile"
-  "components/kong/rebranded-kong/.dockerignore"
-)
+GUI_EXCEPTIONS=()
 
 # -----------------------------------------------------------------------------
 # Helper: Classify file as GUI or Infrastructure
@@ -120,8 +115,23 @@ if [[ "${REF_NAME}" == "main" ]]; then
   echo "[INFO] Starting automatic synchronization to branding branches..."
   BRANDING_BRANCHES=("rebranded-kong-gui-xflow" "rebranded-kong-gui-ngc")
   
-  # All files changed are infrastructure files since we passed the GUI checks
-  INFRA_CHANGES=(${CHANGED_FILES})
+  # Filter out docker-compose.yml and the GUI directories from propagating to branding branches
+  INFRA_CHANGES=()
+  for file in ${CHANGED_FILES}; do
+    if [[ "$file" == "docker-compose.yml" ]]; then
+      echo "[INFO] Skipping sync for docker-compose.yml"
+      continue
+    fi
+    if [[ "$file" == components/kong/rebranded-kong/* ]]; then
+      echo "[INFO] Skipping sync for rebranded-kong files (deleted in main)"
+      continue
+    fi
+    if [[ "$file" == components/kong/kong-manager/* ]]; then
+      echo "[INFO] Skipping sync for kong-manager files (new in main)"
+      continue
+    fi
+    INFRA_CHANGES+=("$file")
+  done
   
   # Configure git bot user
   git config user.name "github-actions[bot]"

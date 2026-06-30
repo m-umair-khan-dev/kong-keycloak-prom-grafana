@@ -1,1 +1,0 @@
-import{r as e}from"./entities-plugins.es-DPvQjhjl.js";var t=e().pluginMetaData;export{t};

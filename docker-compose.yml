@@ -32,7 +32,7 @@ services:
   kong:
     image: rebranded-kong:3.14
     build:
-      context: ./components/kong/rebranded-kong
+      context: ./components/kong/kong-manager
       dockerfile: Dockerfile
     container_name: kong
     restart: always

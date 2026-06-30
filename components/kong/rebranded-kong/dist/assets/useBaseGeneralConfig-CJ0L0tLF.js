@@ -1,1 +1,0 @@
-import{vt as e}from"./runtime-core.esm-bundler-De3fKl10.js";import{_ as t,h as n}from"./index-uGsHg0Mi.js";var r=n(),i=()=>e({app:`kongManager`,workspace:``,gatewayInfo:{edition:r.kongEdition,version:r.kongVersion},apiBaseUrl:t.ADMIN_API_URL});export{i as t};
