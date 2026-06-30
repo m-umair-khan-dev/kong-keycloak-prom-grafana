@@ -115,13 +115,9 @@ if [[ "${REF_NAME}" == "main" ]]; then
   echo "[INFO] Starting automatic synchronization to branding branches..."
   BRANDING_BRANCHES=("rebranded-kong-gui-xflow" "rebranded-kong-gui-ngc")
   
-  # Filter out docker-compose.yml and the GUI directories from propagating to branding branches
+  # Filter out the GUI directories from propagating to branding branches
   INFRA_CHANGES=()
   for file in ${CHANGED_FILES}; do
-    if [[ "$file" == "docker-compose.yml" ]]; then
-      echo "[INFO] Skipping sync for docker-compose.yml"
-      continue
-    fi
     if [[ "$file" == components/kong/rebranded-kong/* ]]; then
       echo "[INFO] Skipping sync for rebranded-kong files (deleted in main)"
       continue
