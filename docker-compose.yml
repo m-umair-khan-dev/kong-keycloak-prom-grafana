@@ -22,17 +22,17 @@ services:
     depends_on:
       - db
     volumes:
-      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
-      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+      - ./components/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./components/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
     ports:
       - "6432:6432"
     networks:
       - internal-net
 
   kong:
-    image: rebranded-kong:3.9
+    image: rebranded-kong:3.14
     build:
-      context: ./kong/rebranded-kong
+      context: ./components/kong/kong-manager
       dockerfile: Dockerfile
     container_name: kong
     restart: always
@@ -50,6 +50,7 @@ services:
       KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
       KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002, 0.0.0.0:8445 ssl
       KONG_ADMIN_GUI_URL: http://localhost:8002
+      KONG_ADMIN_GUI_API_URL: http://localhost:8001
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
@@ -75,7 +76,7 @@ services:
     restart: always
     command: ["-config.file=/etc/tempo/tempo.yml"]
     volumes:
-      - ./tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+      - ./components/tempo/tempo.yml:/etc/tempo/tempo.yml:ro
       - ${DATA_ROOT}/tempo:/var/tempo
     ports:
       - "3200:3200"   # Tempo API
@@ -90,7 +91,7 @@ services:
     restart: always
     command: ["-config.file=/etc/loki/loki.yml"]
     volumes:
-      - ./loki/loki.yml:/etc/loki/loki.yml:ro
+      - ./components/loki/loki.yml:/etc/loki/loki.yml:ro
       - ${DATA_ROOT}/loki:/loki
     ports:
       - "3100:3100"   # Loki HTTP API
@@ -106,7 +107,7 @@ services:
       - loki
     command: ["-config.file=/etc/promtail/promtail.yml"]
     volumes:
-      - ./promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - ./components/promtail/promtail.yml:/etc/promtail/promtail.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     networks:
@@ -156,10 +157,16 @@ services:
     image: prom/prometheus:v3.0.0
     container_name: prometheus
     restart: always
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-otlp-receiver'
     depends_on:
       - kong
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./components/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ${DATA_ROOT}/prometheus:/prometheus
     ports:
       - "9090:9090"
@@ -176,8 +183,8 @@ services:
       - tempo
       - loki
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./components/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./components/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - ${DATA_ROOT}/grafana:/var/lib/grafana
     ports:
       - "3000:3000"

@@ -312,41 +312,22 @@ wait_for_kong() {
   die "Kong Admin API did not become ready"
 }
 
-enable_kong_prometheus() {
-  log_info "Enabling Kong Prometheus plugin"
-  local resp
-  resp=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8001/plugins \
-    --data "name=prometheus" \
-    --data "config.status_code_metrics=true" \
-    --data "config.latency_metrics=true" \
-    --data "config.bandwidth_metrics=true")
-  
-  if [[ "${resp}" == "201" ]]; then
-  log_info "Kong Prometheus plugin enabled"
-  elif [[ "${resp}" == "409" ]]; then
-  log_info "Kong Prometheus plugin already enabled. Updating configuration..."
-    local plugin_id
-    plugin_id=$(curl -s "http://localhost:8001/plugins?name=prometheus" | grep -oE '"id":"[0-9a-f-]{36}"' | head -n 1 | cut -d'"' -f4)
-    if [[ -n "${plugin_id}" ]]; then
-      curl -s -o /dev/null -X PATCH "http://localhost:8001/plugins/${plugin_id}" \
-        --data "config.status_code_metrics=true" \
-        --data "config.latency_metrics=true" \
-        --data "config.bandwidth_metrics=true"
-  log_info "Kong Prometheus plugin configuration updated successfully"
-    else
-  log_warn "Could not determine Prometheus plugin ID to update configuration"
-    fi
-  else
-    die "Failed to configure Kong Prometheus plugin (status ${resp})"
-  fi
-}
-
 enable_kong_opentelemetry() {
   log_info "Enabling Kong OpenTelemetry plugin"
   # Full OTel config: Traces -> Tempo, Logs -> Loki (OTLP), enriched resource attributes
   local otel_config='{"name":"opentelemetry","config":{
     "traces_endpoint":"http://tempo:4318/v1/traces",
     "logs_endpoint":"http://loki:3100/otlp/v1/logs",
+    "access_logs":{
+      "endpoint":"http://loki:3100/otlp/v1/logs"
+    },
+    "metrics":{
+      "endpoint":"http://prometheus:9090/api/v1/otlp/v1/metrics",
+      "enable_latency_metrics":true,
+      "enable_bandwidth_metrics":true,
+      "enable_request_metrics":true,
+      "enable_upstream_health_metrics":true
+    },
     "http_response_header_for_traceid":"X-Trace-Id",
     "sampling_rate":1.0,
     "resource_attributes":{
@@ -382,6 +363,16 @@ enable_kong_opentelemetry() {
       local update_config='{"config":{
         "traces_endpoint":"http://tempo:4318/v1/traces",
         "logs_endpoint":"http://loki:3100/otlp/v1/logs",
+        "access_logs":{
+          "endpoint":"http://loki:3100/otlp/v1/logs"
+        },
+        "metrics":{
+          "endpoint":"http://prometheus:9090/api/v1/otlp/v1/metrics",
+          "enable_latency_metrics":true,
+          "enable_bandwidth_metrics":true,
+          "enable_request_metrics":true,
+          "enable_upstream_health_metrics":true
+        },
         "http_response_header_for_traceid":"X-Trace-Id",
         "sampling_rate":1.0,
         "resource_attributes":{
@@ -412,7 +403,7 @@ main() {
   ensure_data_root
   start_docker_stack
   wait_for_kong
-  enable_kong_prometheus
+  # Enable unified OTLP telemetry (Traces, Logs, Metrics)
   enable_kong_opentelemetry
 
   log_info "Deployment complete!"
