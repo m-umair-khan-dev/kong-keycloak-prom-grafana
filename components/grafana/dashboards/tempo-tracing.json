@@ -145,6 +145,54 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "span.http.method"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Method"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "span.http.route"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "HTTP Route"
+              },
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "span.http.status_code"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Status"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
           }
         ]
       },
@@ -183,7 +231,7 @@
           },
           "filters": [],
           "limit": 50,
-          "query": "{resource.service.name=\"kong-gateway\" && span.http.route=~\"${route:raw}\"}",
+          "query": "{resource.service.name=\"kong-gateway\" && span.http.route=~\"${route:raw}\" && span.http.method =~ \".*\" && span.http.status_code >= 0}",
           "queryType": "traceql",
           "refId": "A",
           "tableType": "traces"
