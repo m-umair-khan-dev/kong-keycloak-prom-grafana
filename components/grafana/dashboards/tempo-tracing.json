@@ -54,7 +54,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 290
+                "value": 100
               },
               {
                 "id": "links",
@@ -70,7 +70,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "serviceName"
+              "options": "Trace Service"
             },
             "properties": [
               {
@@ -79,14 +79,14 @@
               },
               {
                 "id": "custom.width",
-                "value": 130
+                "value": 120
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "name"
+              "options": "Trace Name"
             },
             "properties": [
               {
@@ -95,14 +95,26 @@
               },
               {
                 "id": "custom.width",
-                "value": 100
+                "value": 90
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "startTime"
+              "options": "Span ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Start time"
             },
             "properties": [
               {
@@ -115,7 +127,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 200
+                "value": 180
               }
             ]
           },
@@ -127,15 +139,15 @@
             "properties": [
               {
                 "id": "displayName",
-                "value": "Duration (ms)"
+                "value": "Duration"
               },
               {
                 "id": "unit",
-                "value": "ms"
+                "value": "ns"
               },
               {
                 "id": "custom.width",
-                "value": 140
+                "value": 120
               },
               {
                 "id": "custom.cellOptions",
@@ -149,7 +161,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "span.http.method"
+              "options": "http.method"
             },
             "properties": [
               {
@@ -165,7 +177,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "span.http.route"
+              "options": "http.route"
             },
             "properties": [
               {
@@ -181,7 +193,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "span.http.status_code"
+              "options": "http.status_code"
             },
             "properties": [
               {
@@ -191,6 +203,18 @@
               {
                 "id": "custom.width",
                 "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "service.name"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
               }
             ]
           }
