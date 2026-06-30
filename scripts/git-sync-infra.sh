@@ -153,8 +153,9 @@ if [[ "${REF_NAME}" == "main" ]]; then
     if git diff --quiet && git diff --cached --quiet; then
       echo "[INFO] No infrastructure differences for ${target_branch}. Skipping sync."
     else
+      ORIGINAL_MSG=$(git log main -1 --pretty=%B)
       git add "${INFRA_CHANGES[@]}"
-      git commit -m "sync: synchronize infrastructure updates from main"
+      git commit -m "sync: ${ORIGINAL_MSG}"
       git push origin "${target_branch}"
       echo "[INFO] Sync successful for ${target_branch}!"
     fi
