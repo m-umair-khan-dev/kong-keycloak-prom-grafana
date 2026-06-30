@@ -70,7 +70,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "traceService"
+              "options": "serviceName"
             },
             "properties": [
               {
@@ -86,7 +86,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "traceName"
+              "options": "name"
             },
             "properties": [
               {
@@ -122,7 +122,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "traceDuration"
+              "options": "duration"
             },
             "properties": [
               {
@@ -234,7 +234,7 @@
           "query": "{resource.service.name=\"kong-gateway\" && span.http.route=~\"${route:raw}\" && span.http.method =~ \".*\" && span.http.status_code >= 0}",
           "queryType": "traceql",
           "refId": "A",
-          "tableType": "traces"
+          "tableType": "spans"
         }
       ]
     },
