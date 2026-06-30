@@ -22,10 +22,15 @@ datasources:
           - key: service.name
             value: service
       tracesToLogsV2:
-        datasourceUid: ''
+        datasourceUid: 'loki-datasource'
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        tags:
+          - key: service.name
+            value: service
       search:
         hide: false
       nodeGraph:
         enabled: true
       lokiSearch:
-        datasourceUid: ''
+        datasourceUid: 'loki-datasource'
