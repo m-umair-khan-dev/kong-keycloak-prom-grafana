@@ -14,15 +14,10 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 # List of paths or glob patterns containing GUI/Branding files.
 # All paths are relative to the repository root.
-GUI_PATTERNS=(
-  "kong/rebranded-kong/*"
-)
+GUI_PATTERNS=()
 
 # Exception paths within GUI folders that are considered infrastructure.
-GUI_EXCEPTIONS=(
-  "kong/rebranded-kong/Dockerfile"
-  "kong/rebranded-kong/.dockerignore"
-)
+GUI_EXCEPTIONS=()
 
 # -----------------------------------------------------------------------------
 # Helper: Classify file as GUI or Infrastructure
@@ -120,12 +115,23 @@ if [[ "${REF_NAME}" == "main" ]]; then
   echo "[INFO] Starting automatic synchronization to branding branches..."
   BRANDING_BRANCHES=("rebranded-kong-gui-xflow" "rebranded-kong-gui-ngc")
   
-  # All files changed are infrastructure files since we passed the GUI checks
-  INFRA_CHANGES=(${CHANGED_FILES})
+  # Filter out the GUI directories from propagating to branding branches
+  INFRA_CHANGES=()
+  for file in ${CHANGED_FILES}; do
+    if [[ "$file" == components/kong/rebranded-kong/* ]]; then
+      echo "[INFO] Skipping sync for rebranded-kong files (deleted in main)"
+      continue
+    fi
+    if [[ "$file" == components/kong/kong-manager/* ]]; then
+      echo "[INFO] Skipping sync for kong-manager files (new in main)"
+      continue
+    fi
+    INFRA_CHANGES+=("$file")
+  done
   
   # Configure git bot user
-  git config user.name "github-actions[bot]"
-  git config user.email "github-actions[bot]@users.noreply.github.com"
+  git config user.name "Muhammad Umair Khan"
+  git config user.email "umair.ims19@gmail.com"
   
   # Sync to each target branch
   for target_branch in "${BRANDING_BRANCHES[@]}"; do
@@ -136,8 +142,16 @@ if [[ "${REF_NAME}" == "main" ]]; then
     git checkout "${target_branch}"
     git pull origin "${target_branch}" --rebase || true
     
-    # Selectively copy only the changed infra files from main
-    git checkout main -- "${INFRA_CHANGES[@]}"
+    # Selectively copy or delete only the changed infra files from main
+    for f in "${INFRA_CHANGES[@]}"; do
+      if git ls-tree -r main --name-only | grep -q "^${f}$"; then
+        git checkout main -- "${f}"
+      else
+        # File was deleted in main, remove it here too
+        git rm -q --ignore-unmatch "${f}" || true
+        rm -f "${f}"
+      fi
+    done
     
     # Check if there are staging changes or working tree changes
     if git diff --quiet && git diff --cached --quiet; then
