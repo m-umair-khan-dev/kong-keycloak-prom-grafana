@@ -268,8 +268,216 @@
         "uid": "loki-datasource"
       },
       "fieldConfig": {
-        "defaults": {},
-        "overrides": []
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 500
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Time"
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsIso"
+              },
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "http_request_method"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Method"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "url_path"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Path"
+              },
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "kong_service_name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Target Service"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "kong_route_name"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Route Name"
+              },
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "http_response_status_code"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Status"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 400
+                    },
+                    {
+                      "color": "red",
+                      "value": 500
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "kong_latency_total"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Latency (ms)"
+              },
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "client_address"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Client IP"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "trace_id"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Trace ID"
+              },
+              {
+                "id": "custom.width",
+                "value": 260
+              },
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "View Trace in Tempo",
+                    "url": "/explore?left={\"datasource\":\"tempo-datasource\",\"queries\":[{\"query\":\"${__value.raw}\",\"queryType\":\"traceql\",\"refId\":\"A\"}],\"range\":{\"from\":\"now-1h\",\"to\":\"now\"}}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 12,
@@ -279,17 +487,25 @@
       },
       "id": 2,
       "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": false,
-        "showCommonLabels": false,
-        "showLabels": false,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": false
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Time",
+            "desc": true
+          }
+        ]
       },
       "title": "Kong Access Logs ($route)",
-      "type": "logs",
+      "type": "table",
       "targets": [
         {
           "datasource": {
@@ -299,6 +515,53 @@
           "expr": "{service_name=\"kong-gateway\"} | log_type=\"access\" | url_path=~\"${route:raw}\"",
           "queryType": "range",
           "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "Time",
+                "http_request_method",
+                "url_path",
+                "kong_service_name",
+                "kong_route_name",
+                "http_response_status_code",
+                "kong_latency_total",
+                "client_address",
+                "trace_id"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organizeFields",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "Time": 0,
+              "http_request_method": 1,
+              "url_path": 2,
+              "kong_service_name": 3,
+              "kong_route_name": 4,
+              "http_response_status_code": 5,
+              "kong_latency_total": 6,
+              "client_address": 7,
+              "trace_id": 8
+            },
+            "renameByName": {
+              "http_request_method": "Method",
+              "url_path": "Path",
+              "kong_service_name": "Target Service",
+              "kong_route_name": "Route Name",
+              "http_response_status_code": "Status",
+              "kong_latency_total": "Latency (ms)",
+              "client_address": "Client IP",
+              "trace_id": "Trace ID"
+            }
+          }
         }
       ]
     }
